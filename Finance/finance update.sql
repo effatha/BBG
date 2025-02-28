@@ -1,0 +1,65 @@
+				 ,(GrossOrderValue - [AMT_CANCELLED_ORDER_VALUE_EUR])										AS [AMT_NET_ORDER_VALUE_EUR]
+				 ,((GrossOrderValue+OrderDiscounts) - [AMT_CANCELLED_ORDER_VALUE_EUR]) *VL_NET_ORDER_VALUE_FULL_PRICE_PARAM		AS [AMT_NET_ORDER_VALUE_FULL_PRICE_EUR]
+
+
+
+				 				,CASE 
+                    WHEN (isnull(ReasonForRejections,'')  <> '' and isnull(ReasonForRejections,'') <>'Wrongly created') 
+						OR CD_SOURCE_SYSTEM = 'SGE'
+                     THEN (GrossOrderValue) * VL_CANCELLED_ORDER_VALUE_PARAM ELSE 0 END						AS [AMT_CANCELLED_ORDER_VALUE_EUR]
+
+
+
+
+					 				,CASE 
+                    WHEN (isnull(ReasonForRejections,'')  <> '' and isnull(ReasonForRejections,'') <>'Wrongly created') 
+						OR CD_SOURCE_SYSTEM = 'SGE'
+                     THEN ISNULL(Quantity,0) * VL_CANCELLED_ORDER_QUANTITY_PARAM ELSE 0 END					AS [VL_CANCELLED_ORDER_QUANTITY]
+
+
+
+
+
+			LEFT JOIN [L1].[L1_DIM_A_SALES_TRAN_KPI_MATRIX] kpi
+			ON kpi.ID_SALES_TRANSACTION_TYPE = fact.ID_SALES_TRANSACTION_TYPE
+
+
+
+			UPDATE fact
+				
+				SET fact.[AMT_CANCELLED_ORDER_VALUE_EUR] = CASE 
+															WHEN (isnull(T_CANCELLATION_REASON,'')  <> '' and isnull(T_CANCELLATION_REASON,'') <>'Wrongly created') 
+																OR fact.CD_SOURCE_SYSTEM = 'SGE'
+															 THEN (AMT_GROSS_ORDER_VALUE_EUR) * VL_CANCELLED_ORDER_VALUE_PARAM ELSE 0 END
+
+					,fact.[VL_CANCELLED_ORDER_QUANTITY] = CASE 
+															WHEN (isnull(T_CANCELLATION_REASON,'')  <> '' and isnull(T_CANCELLATION_REASON,'') <>'Wrongly created') 
+																OR fact.CD_SOURCE_SYSTEM = 'SGE'
+															 THEN (VL_ITEM_QUANTITY) * VL_CANCELLED_ORDER_VALUE_PARAM ELSE 0 END
+			FROM L1.L1_FACT_A_SALES_TRANSACTION_KPI fact		
+			INNER JOIN [L1].[L1_DIM_A_SALES_TRAN_KPI_MATRIX] kpi
+				ON kpi.ID_SALES_TRANSACTION_TYPE = fact.ID_SALES_TRANSACTION_TYPE
+
+
+
+
+			UPDATE fact
+				SET 
+					[AMT_NET_ORDER_VALUE_FULL_PRICE_EUR] = ((AMT_GROSS_ORDER_VALUE_EUR - AMT_NET_DISCOUNT_EUR)- [AMT_CANCELLED_ORDER_VALUE_EUR])	* VL_NET_ORDER_VALUE_FULL_PRICE_PARAM
+			FROM L1.L1_FACT_A_SALES_TRANSACTION_KPI fact		
+			INNER JOIN [L1].[L1_DIM_A_SALES_TRAN_KPI_MATRIX] kpi
+				ON kpi.ID_SALES_TRANSACTION_TYPE = fact.ID_SALES_TRANSACTION_TYPE
+
+
+				select * from [L1].[L1_DIM_A_SALES_TRAN_KPI_MATRIX] kpi
+
+
+				(OrderQuantity - [VL_CANCELLED_ORDER_QUANTITY]) * VL_CANCELLED_ORDER_QUANTITY_PARAM		AS [VL_NET_ORDER_QUANTITY]
+
+
+
+							SELECT 
+								top 10 AMT_NET_DISCOUNT_EUR ,*
+							FROM L1.L1_FACT_A_SALES_TRANSACTION_KPI fact		
+			INNER JOIN [L1].[L1_DIM_A_SALES_TRAN_KPI_MATRIX] kpi
+				ON kpi.ID_SALES_TRANSACTION_TYPE = fact.ID_SALES_TRANSACTION_TYPE
