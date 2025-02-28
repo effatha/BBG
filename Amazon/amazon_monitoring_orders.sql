@@ -1,4 +1,3 @@
-/****** Script for SelectTopNRows command from SSMS  ******/
 ;with amazon_orders as(
 SELECT 
 	   [CD_AMAZON_ORDER],
@@ -42,7 +41,7 @@ WHERE
 	amz.[MIN_ORDER_DATE] >= '2024-01-01'
 Group by amz.[MIN_ORDER_DATE],CASE WHEN sales.OrderDate is null THEN -1 ELSE DateDIFF(day,amz.[MIN_ORDER_DATE],sales.OrderDate) END,CD_ORDER_STATUS,T_AMAZON_CHANNEL
 )
-SELECT 
+SELECT TOP 10  
 	*,
 	Total = SUM(NumberOrders) OVER (Partition by AmazonOrderDate),
 	DelayPercentage = ROUND((NumberOrders*1.0 /SUM(NumberOrders*1.0) OVER (Partition by AmazonOrderDate)) * 100,2)
