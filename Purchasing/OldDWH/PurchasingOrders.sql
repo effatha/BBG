@@ -45,96 +45,96 @@ SELECT EBELN,EBELP,MIN(OPNQTY) as OPNQTY,MIN(BookingConfirmedZ2) as BookingConfi
 )
 
 SELECT
-      HDR.EBELN															AS ProcessId							
-	, HDR.EBELN															AS DocumentNo				
-    , ITM.EBELP															AS PositionId		
-	, HDR.BUKRS															AS CompanyCode						
-	, HDR.EKORG															AS PurchasingOrganizationCode
-	, CAST(NULL AS NVARCHAR)											AS PurchasingOrganizationName
-	, CAST(FORMAT(HDR.BEDAT,'yyyyMMdd') AS INT)							AS TransactionDateDimCalendarID			
-	, ITM.MENGE															AS Quantity							
+ --     HDR.EBELN															AS ProcessId							
+--	, HDR.EBELN															AS DocumentNo				
+ --   , ITM.EBELP															AS PositionId		
+--	, HDR.BUKRS															AS CompanyCode						
+--	, HDR.EKORG															AS PurchasingOrganizationCode
+--	, CAST(NULL AS NVARCHAR)											AS PurchasingOrganizationName
+--	, CAST(FORMAT(HDR.BEDAT,'yyyyMMdd') AS INT)							AS TransactionDateDimCalendarID			
+--	, ITM.MENGE															AS Quantity							
 	, CAST(ITM.netwr/IIF(ITM.menge=0,1,ITM.menge) AS MONEY)				AS ItemPriceForeignCurrency		
-	, CAST(ITM.NETPR AS MONEY)										AS ItemPrice					
-	, SUBSTRING(ITM.MATNR, PATINDEX('%[^0]%', ITM.MATNR), LEN(ITM.MATNR))	AS ItemNo							
-	, CAST(CASE																									
-		WHEN ITM.WKURS < 0	THEN (1 / ABS(ITM.WKURS))															
-			ELSE ABS(ITM.WKURS)																					
-	  END AS DECIMAL(30, 20))											AS ExchangeRate							
-	, HDR.WAERS															AS Currency								
+--	, CAST(ITM.NETPR AS MONEY)										AS ItemPrice					
+--	, SUBSTRING(ITM.MATNR, PATINDEX('%[^0]%', ITM.MATNR), LEN(ITM.MATNR))	AS ItemNo							
+--	, CAST(CASE																									
+		--WHEN ITM.WKURS < 0	THEN (1 / ABS(ITM.WKURS))															
+		--	ELSE ABS(ITM.WKURS)																					
+	 -- END AS DECIMAL(30, 20))											AS ExchangeRate							
+--	, HDR.WAERS															AS Currency								
 	, FW_FS.Forwarder													AS Forwarder
-	, HDR.ZZFORWARDER_REF												AS ForwarderReferenceNumber			
-	, CAST(FORMAT(ITM.ZMM_MRD,'yyyyMMdd') AS INT)						AS MaterialReadyDateDimCalendarId		
-	, 0					AS PlannedQCDateDimCalendarId			
-	, 0						AS PlannedETDDimCalendarId				
-	, HDR.ZZ_ZTERM														AS PaymenttermsCode						
-	, CAST(NULL AS NVARCHAR)											AS PercentageDesposit
-	, CAST(NULL AS NVARCHAR)											AS Incoterms
-	, 0																	AS DueDateDimCalendarId
-	, 0																	AS ProcessIdCreationDateDimCalendarId	
-	, CAST(FORMAT(HDR.BUDAT,'yyyyMMdd') AS INT)							AS PostingDateDimCalendarId
-	, ITM.LGORT															AS StorageLocation					
-	, ITM.WERKS															AS Plant							
+--	, HDR.ZZFORWARDER_REF												AS ForwarderReferenceNumber			
+--	, CAST(FORMAT(ITM.ZMM_MRD,'yyyyMMdd') AS INT)						AS MaterialReadyDateDimCalendarId		
+--	, 0					AS PlannedQCDateDimCalendarId			
+--	, 0						AS PlannedETDDimCalendarId				
+--	, HDR.ZZ_ZTERM														AS PaymenttermsCode						
+--	, CAST(NULL AS NVARCHAR)											AS PercentageDesposit
+--	, CAST(NULL AS NVARCHAR)											AS Incoterms
+--	, 0																	AS DueDateDimCalendarId
+--	, 0																	AS ProcessIdCreationDateDimCalendarId	
+--	, CAST(FORMAT(HDR.BUDAT,'yyyyMMdd') AS INT)							AS PostingDateDimCalendarId
+--	, ITM.LGORT															AS StorageLocation					
+--	, ITM.WERKS															AS Plant							
 	, CAST( CASE
 		WHEN Incident.Id IS NOT NULL THEN 1
 			ELSE 0
 	  END AS bit)														AS IncidentFlag
 	, Incident.IncidentReason											AS IncidentReason
-	, Config.TransactionType											AS TransactionTypeDetail
-	, Config.TransactionTypeShort										AS TransactionTypeShort
-	, HDR.BSART															AS SDDocCategroyTransactionTypeShort
-	, ITM.LIFNR 														AS SupplierNumber
-	, CAST(NULL AS NVARCHAR)														AS SupplierName
-	, CAST(NULL AS NVARCHAR)											AS SupplierCode
-	, CAST(NULL AS NVARCHAR)											AS SupplierGroupNumber
-	, CAST(NULL AS NVARCHAR)											AS SupplierGroupName
-	, HDR.ZZSUPPLIER_REF 												AS SupplierReference			
-	, CAST(NULL AS NVARCHAR)											AS ETDDelayReason
-	, CAST(NULL AS NVARCHAR)											AS QCDDelayReason
-	, CAST(NULL AS NVARCHAR)											AS MRDDelayReason
-	, CAST(NULL AS NVARCHAR)											AS Warehouse
-	, 0																	AS TransactionDateDimTimeId
-	, 0																	AS MaterialReadyDateDimTimeId
-	, 0																	AS PlannedQCDateDimTimeId
-	, 0																	AS PlannedETDDimTimeId
-	, 0																	AS DueDateDimTimeId
-	, 0																	AS ProcessIdCreationDateDimTimeId
-	, 0																	AS ProcessIdLastChangeDateDimTimeId
-	, 0																	AS PostingDateDimTimeId
-	, 0																	AS ETAWarehouseDimTimeId
-	, 0																	AS ProcessIdLastChangeDateDimCalendarId
-	, CAST(FORMAT(HDR.ZZETA,'yyyyMMdd') AS INT)							AS ETAPortDimCalendarId	
+--	, Config.TransactionType											AS TransactionTypeDetail
+--	, Config.TransactionTypeShort										AS TransactionTypeShort
+--	, HDR.BSART															AS SDDocCategroyTransactionTypeShort
+	--, ITM.LIFNR 														AS SupplierNumber
+	--, CAST(NULL AS NVARCHAR)														AS SupplierName
+	--, CAST(NULL AS NVARCHAR)											AS SupplierCode
+	--, CAST(NULL AS NVARCHAR)											AS SupplierGroupNumber
+	--, CAST(NULL AS NVARCHAR)											AS SupplierGroupName
+--	, HDR.ZZSUPPLIER_REF 												AS SupplierReference			
+	--, CAST(NULL AS NVARCHAR)											AS ETDDelayReason
+	--, CAST(NULL AS NVARCHAR)											AS QCDDelayReason
+	--, CAST(NULL AS NVARCHAR)											AS MRDDelayReason
+	--, CAST(NULL AS NVARCHAR)											AS Warehouse
+	--, 0																	AS TransactionDateDimTimeId
+	--, 0																	AS MaterialReadyDateDimTimeId
+	--, 0																	AS PlannedQCDateDimTimeId
+	--, 0																	AS PlannedETDDimTimeId
+	--, 0																	AS DueDateDimTimeId
+	--, 0																	AS ProcessIdCreationDateDimTimeId
+	--, 0																	AS ProcessIdLastChangeDateDimTimeId
+	--, 0																	AS PostingDateDimTimeId
+	--, 0																	AS ETAWarehouseDimTimeId
+	--, 0																	AS ProcessIdLastChangeDateDimCalendarId
+	--, CAST(FORMAT(HDR.ZZETA,'yyyyMMdd') AS INT)							AS ETAPortDimCalendarId	
 	, CAST(FORMAT(SCL.EINDT	,'yyyyMMdd') AS INT)						AS ETAWarehouseDimCalendarId
-	, ITM.KNUMV															AS DocumentConditionNo
-	, ITM.ZZ_DPTYP 														AS DownPaymentCategory				
-	, CAST(FORMAT(ITM.ZZ_DPDAT,'yyyyMMdd') AS INT)						AS DownPaymentDueDateDimCalendarId					
-	, ITM.ZZ_DPAMT 														AS DownPaymentAmount	
-	, ITM.ZZ_DPPCT														AS DownPaymentPercentage	
-	, ITM.KONNR															AS ContractNumber	
-	, HDR.ZZTRANSPORT_MODE												AS TransportMode 
+	--, ITM.KNUMV															AS DocumentConditionNo
+	--, ITM.ZZ_DPTYP 														AS DownPaymentCategory				
+	--, CAST(FORMAT(ITM.ZZ_DPDAT,'yyyyMMdd') AS INT)						AS DownPaymentDueDateDimCalendarId					
+	--, ITM.ZZ_DPAMT 														AS DownPaymentAmount	
+	--, ITM.ZZ_DPPCT														AS DownPaymentPercentage	
+	--, ITM.KONNR															AS ContractNumber	
+--	, HDR.ZZTRANSPORT_MODE												AS TransportMode 
 	, TRA.[TEXT]														AS TransportModeDescription	
-	, HDR.ZZPORT_OF_LOADING												AS PortOfLoading 
-	, HDR.ZZPORT_OF_DISCHARG											AS PortOfDischarge	
-	, ITM.EKGRP															AS PurchasingGroup
-	, CAST(FORMAT(ITM.ZMM_IM_READY_DATE,'yyyyMMdd') AS INT)				AS IMReadyDateDimCalendarId
-	, ITM.BSAKZ															AS ConfirmationControlType 		
-	, ITM.LLIEF															AS GoodsSupplier 
-	, CASE WHEN ITM.is_deleted = 1 THEN 'L' ELSE ITM.LOEKZ END			AS DeletionIndicator
+--	, HDR.ZZPORT_OF_LOADING												AS PortOfLoading 
+--	, HDR.ZZPORT_OF_DISCHARG											AS PortOfDischarge	
+--	, ITM.EKGRP															AS PurchasingGroup
+--	, CAST(FORMAT(ITM.ZMM_IM_READY_DATE,'yyyyMMdd') AS INT)				AS IMReadyDateDimCalendarId
+--	, ITM.BSAKZ															AS ConfirmationControlType 		
+--	, ITM.LLIEF															AS GoodsSupplier 
+--	, CASE WHEN ITM.is_deleted = 1 THEN 'L' ELSE ITM.LOEKZ END			AS DeletionIndicator
 	,CAST(CASE WHEN HDR.ZZ_WEAKT = 'X' THEN 1 ELSE 0 END  AS BIT)                    AS ProcessFulfilled
 	, CAST(LEFT (HDR.[ZZ_LASTCHANGEDATETIME],8) AS INT)					AS HeaderChangeDateDimCalendarID
 	, CAST([ZZ_LASTCHANGEDATETIME]%1000000 AS INT)						AS HeaderChangeDateDimTimeID	
-	, CAST(FORMAT(ITM.ZZ_AEDAT,'yyyyMMdd') AS INT)						AS ItemChangeDateDimCalendarId
+--	, CAST(FORMAT(ITM.ZZ_AEDAT,'yyyyMMdd') AS INT)						AS ItemChangeDateDimCalendarId
 	, CAST(ITM.NETWR	AS DECIMAL(19, 4))														AS [ValueForeignCurrency]
 	, CAST(ABS(ITM.NETPR * ITM.MENGE) AS MONEY)										AS [Value]							
-    , CAST(FORMAT(HDR.ZZETD,'yyyyMMdd') AS INT)						AS ETDDateDimCalendarId
-	, CAST(FORMAT(ITM.ZMM_QC_DATE,'yyyyMMdd') AS INT)					AS QCDateDimCalendarId
+    --, CAST(FORMAT(HDR.ZZETD,'yyyyMMdd') AS INT)						AS ETDDateDimCalendarId
+--	, CAST(FORMAT(ITM.ZMM_QC_DATE,'yyyyMMdd') AS INT)					AS QCDateDimCalendarId
 	, CAST(SCN.BookingConfirmedZ2 AS NVARCHAR) AS BookingConfirmedZ2
 	, CAST(SCN.BookingConfirmedZ3 AS NVARCHAR) AS BookingConfirmedZ3
 	, SCN.BookingConfirmedZ3CreationDate AS BookingConfirmedZ3CreationDimDateID
 	, SCN.BookingConfirmedZ3DeliveryDate AS BookingConfirmedZ3DeliveryDimDateID	
-	, ITM.INFNR AS InfoRecordNumber		
+--	, ITM.INFNR AS InfoRecordNumber		
     , ATTR.ALTKN AS Creditornumber
 	, CAST(ISNULL(FORMAT(ITM.ZMM_ETD,'yyyyMMdd'), 0) AS INT)				AS ETDPositionLevelDimCalendarId
-    , ITM.ZCONTRACT_REFERENCE                                               AS Contract_Reference
+--    , ITM.ZCONTRACT_REFERENCE                                               AS Contract_Reference
 FROM [CT dwh 00 Meta].[SAP].[tDocumentTypeBucketConfigPurchasing] AS Config WITH (NOLOCK) 
 INNER JOIN [CT dwh 02 Data].[dbo].[tSAP2LIS_02_HDR] AS HDR WITH (NOLOCK)
 	ON Config.[TransactionTypeShort] = HDR.BSTYP
