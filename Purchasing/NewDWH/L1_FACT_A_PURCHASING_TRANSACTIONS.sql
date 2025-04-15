@@ -1,4 +1,5 @@
-CREATE TABLE TEST.L1_FACT_A_PURCHASIG_TRANSACTIONS (
+ DROP TABLE TEST.L1_FACT_A_PURCHASING_TRANSACTIONS
+CREATE TABLE TEST.L1_FACT_A_PURCHASING_TRANSACTIONS (
     -- Document Header Fields
     CD_DOCUMENT_NO VARCHAR(10) NOT NULL,                -- Purchasing Document Number (Primary Key with Item)
     CD_DOCUMENT_TYPE VARCHAR(4),                        -- Document Type Code
@@ -26,7 +27,6 @@ CREATE TABLE TEST.L1_FACT_A_PURCHASIG_TRANSACTIONS (
     CD_TRANSPORT_MODE VARCHAR(10),                      -- Transport Mode
     CD_PORT_OF_LOADING VARCHAR(50),                     -- Port of Loading
     CD_PORT_OF_DISCHARGE VARCHAR(50),                   -- Port of Discharge
-
     -- Item Fields
     CD_DOCUMENT_LINE INT NOT NULL,                      -- Item Number of PO (Primary Key with Document No)
     CD_ITEM VARCHAR(18),                                -- Material Number
@@ -49,7 +49,7 @@ CREATE TABLE TEST.L1_FACT_A_PURCHASIG_TRANSACTIONS (
     CD_INCOTERMS_L2 VARCHAR(50),                        -- Incoterms Level 2
     AMT_GROSS_PRICE_FC DECIMAL(18,2),                   -- Gross Price in FC
     FL_DOCUMENT_LINE_DELETION CHAR(1),                  -- Line Item Deletion Flag
-    CD_CONTRACT_REFERENCE VARCHAR(20),                  -- Contract Reference
+    CD_CONTRACT_REFERENCE VARCHAR(150),                  -- Contract Reference
     D_ITEM_READY_DATE DATE,                             -- Item Ready Date
     CD_DOWN_PAYMENT_CATEGORY VARCHAR(10),               -- Down Payment Category
     D_LINE_DOWN_PAYMENT DATE,                           -- Line Down Payment Due Date
@@ -63,7 +63,17 @@ CREATE TABLE TEST.L1_FACT_A_PURCHASIG_TRANSACTIONS (
     D_QUALITY_CONTROL DATE,                             -- Quality Control Inspection Date
     CD_INFO_RECORD VARCHAR(10),                         -- Info Record Number
     D_LINE_ETD DATE ,                                   -- Estimated Time of Departure (Item Level)
-	DT_DWH_CREATED  smalldatetime NOT NULL,
-	DT_DWH_UPDATED  smalldatetime NOT NULL
+    FL_DELIVERY_COMPLETED VARCHAR(1),                   --     Delivery Completed Indicator (X = yes)
+    ----SCN
+    FL_BOOKING_CONFIRMED VARCHAR(1),                    -- Booking Confirmed Y/N
+    FL_BOOKING_CONFIRMED_Z2 VARCHAR(1),                    -- Booking Confirmed Y/N
+    FL_BOOKING_CONFIRMED_Z3 VARCHAR(1),                    -- Booking Confirmed Y/N
+    D_CREATED_BOOKING_CONFIRMED_Z3 DATE,                   -- Creation date of the booking comfirmed line
+    D_DELIVERY_BOOKING_CONFIRMED_Z3 DATE,                   -- Delivery date of the booking comfirmed line
+    --- SCL 
+    D_ETA_WAREHOUSE DATE,                                    -- Estimated Time of Arrival at warehouse
+
+    DT_DWH_CREATED smalldatetime NOT NULL,
+	DT_DWH_UPDATED smalldatetime NOT NULL
 )
     

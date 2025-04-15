@@ -298,3 +298,7 @@ GRANT SELECT ON EX.EX_V_ITEM TO sp-BBG-DWH-PPCAuto;
 
 
 	EXEC sp_addrolemember N'largerc', N'sg-BBG-DWH-DataEngineers-PROD'
+
+
+
+				EXEC sp_addrolemember N'db_datawriter', N'synw-sql-login-prd'

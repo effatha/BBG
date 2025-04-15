@@ -97,12 +97,14 @@ INSERT INTO [MD].[MD_L0_LOAD_LIST]
            ,[KeyColumns]
            ,[PipelineLastRun])
      VALUES
-           ('L0_S4HANA_2LIS_02_HDR'
-           ,'L0'
-           ,'curated/s4hana_theobald/cbp/2lis_02_hdr'
-           ,1
+           ('L0_S4HANA_2LIS_02_HDR_FULL'
+           ,'TEST'
+           ,'curated/s4hana_theobald/cbp/2lis_02_hdr_temp'
+           ,0
            ,'SAP'
-           ,'ROCANCEL,EBELN'
+           ,'EBELN'
            ,'2024-01-01')
 
---select * from [MD].[MD_L0_LOAD_LIST] where tablename ='L0_S4HANA_2LIS_02_HDR'
+--select * from [MD].[MD_L0_LOAD_LIST] where tablename Like'L0_S4HANA_2LIS_02_ITM%'
+
+update [MD].[MD_L0_LOAD_LIST]set [KeyColumns] = 'EBELN,EBELP' where [TableName] = 'L0_S4HANA_2LIS_02_HDR'

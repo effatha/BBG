@@ -1,4 +1,4 @@
-CREATE TABLE [L0].[L0_S4HANA_2LIS_02_ITM]
+CREATE TABLE [TEST].[L0_S4HANA_2LIS_02_ITM_FULL]
 (
 	[ROCANCEL] [nvarchar](1) NULL,
 	[BEDAT] [date] NULL,
@@ -183,10 +183,29 @@ WITH
 	DISTRIBUTION = HASH ( [EBELN] ),
 	CLUSTERED COLUMNSTORE INDEX
 )
-GO
 
 
+INSERT INTO [MD].[MD_L0_LOAD_LIST]
+           ([TableName]
+           ,[SchemaName]
+           ,[FolderPath]
+           ,[Is_Active]
+           ,[EntityName]
+           ,[KeyColumns]
+           ,[PipelineLastRun])
+     VALUES
+           ('L0_S4HANA_2LIS_02_ITM_FULL'
+           ,'TEST'
+           ,'curated/s4hana_theobald/cbp/2lis_02_itm_temp'
+           ,0
+           ,'SAP'
+           ,'ROCANCEL,EBELN,EBELP'
+           ,'2024-01-01')
+
+update [MD].[MD_L0_LOAD_LIST]set [KeyColumns] = 'EBELN,EBELP' where [TableName] = 'L0_S4HANA_2LIS_02_ITM_FULL'
+
+---- select * INTO [TEST].[L0_S4HANA_2LIS_02_ITM] from [L0].[L0_S4HANA_2LIS_02_ITM]
+
+select * from [MD].[MD_L0_LOAD_LIST] where [TableName] like '%03_BF%'
 
 
-
----- select top 10 * from [L0].[L0_S4HANA_2LIS_02_HDR]

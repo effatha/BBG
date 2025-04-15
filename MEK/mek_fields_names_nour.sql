@@ -1,4 +1,3 @@
-/****** Script for SelectTopNRows command from SSMS  ******/
 SELECT TOP (1000) [CD_PLANT]
       ,[ID_ITEM]
       ,[CD_ITEM_TYPE]
