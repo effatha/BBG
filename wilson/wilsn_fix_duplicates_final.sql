@@ -1,16 +1,16 @@
---SELECT * INTO Wilson.dbo.Order_bck20250305 FROM Wilson.dbo.[Order]
---SELECT * INTO Wilson.dbo.OrderItem_bck20250305 FROM Wilson.dbo.[OrderItem]
-select COUNT(*) from Wilson.dbo.Order_bck20250305
+--SELECT * INTO Wilson.dbo.Order_bck20250627 FROM Wilson.dbo.[Order]
+--SELECT * INTO Wilson.dbo.OrderItem_bck20250627 FROM Wilson.dbo.[OrderItem]
+select COUNT(*) from Wilson.dbo.Order_bck20250627
 select COUNT(*) from Wilson.dbo.[Order]
 
-select COUNT(*) from Wilson.dbo.OrderItem_bck20250305
+select COUNT(*) from Wilson.dbo.OrderItem_bck20250627
 select COUNT(*) from Wilson.dbo.[OrderItem]
 
 
 ------------------------------------------
 -- Wilson Duplicates Removal
 -----------------------------------------
-DECLARE @OrderID nvarchar(50) = ''
+DECLARE @OrderID nvarchar(50) = '0407351373'
 
 ------------------------------------------
 -- Create the necessary temp tables
@@ -33,6 +33,7 @@ CREATE TABLE #tempOrders
 		InvoiceDate datetime2,
 		BusinessPartnerNumber nvarchar(50),
 		TrackingNumber nvarchar(50),
+		ParentInvoiceId nvarchar(50),
 		Carrier nvarchar(50)
 
 	)
@@ -61,8 +62,10 @@ CREATE TABLE #tempOrderItem
 (
 	SELECT o.OrderId
 	from Wilson.dbo.[Order] o
-	--where (o.Orderid = @OrderID OR @OrderID = '')
+	where 1=1-- (o.Orderid = @OrderID OR @OrderID = '')
 	--where  cast(o.CreatedOn as date)>= '20250101'
+	--OrderId = '0407351373'
+	and o.Isdeleted =0
 	Group by OrderId
 	having count(*)>1
 ),
@@ -70,15 +73,18 @@ cte_items as
 (
 	SELECT o.id orderid, count(distinct oi.id) NumberItemRows
 	FROM Wilson.dbo.[Order] o
-	Left JOIN Wilson.dbo.OrderItem oi on oi.OrderId = o.Id
+	Left JOIN Wilson.dbo.OrderItem oi on oi.OrderId = o.Id and oi.isdeleted = 0 
 	INNER JOIN cte_orders cte on cte.OrderId = o.OrderId 
+	WHERE
+		o.isdeleted = 0 --and o.orderid = '0407351373'
 	GROUP BY o.id
 )
-INSERT INTO #tempOrders(OrderID,OrderNo,CreatedOn,ModifiedOn,NumberOrderItems,orderrank,DeliveryAddressId,InvoiceNumber,DeliveryOrderId,CoolingOffExpirationDate,InvoiceDate,BusinessPartnerNumber,TrackingNumber,Carrier)
-SELECT id,o.orderid,CreatedOn,ModifiedOn,ISNULL(cte.NumberItemRows,0), rank() over(partition by o.orderid order by CreatedOn asc, o.id asc), DeliveryAddressId,InvoiceNumber,DeliveryOrderId,CoolingOffExpirationDate,InvoiceDate,BusinessPartnerNumber,TrackingNumber,Carrier
+INSERT INTO #tempOrders(OrderID,OrderNo,CreatedOn,ModifiedOn,NumberOrderItems,orderrank,DeliveryAddressId,InvoiceNumber,DeliveryOrderId,CoolingOffExpirationDate,InvoiceDate,BusinessPartnerNumber,TrackingNumber,Carrier,ParentInvoiceId)
+SELECT id,o.orderid,CreatedOn,ModifiedOn,ISNULL(cte.NumberItemRows,0), rank() over(partition by o.orderid order by CreatedOn asc, o.id asc), DeliveryAddressId,InvoiceNumber,DeliveryOrderId,CoolingOffExpirationDate,InvoiceDate,BusinessPartnerNumber,TrackingNumber,Carrier,ParentInvoiceId
 FROM Wilson.dbo.[Order] o
 INNER join cte_items cte on cte.OrderId = o.id
-
+where 
+	o.isdeleted = 0
 -- set delete to the record with no orderitem
 UPDATE t
 	SET t.ToDelete = 1
@@ -86,8 +92,8 @@ FROM #tempOrders t
 WHERE
 	NumberOrderItems =0 
 
---SELECT count(*) FROM #tempOrders where OrderNo = '0200857253'
-
+--SELECT count(*) FROM #tempOrders where OrderNo = '0200857253'  ---39228
+--SELECT * FROM #tempOrders
 --SELECT top 10 *  FROM Wilson.dbo.[Order]
 --- unify all records of the same order with the same data points
 ;with cte_orders_update as (
@@ -101,6 +107,7 @@ WHERE
 		CoolingOffExpirationDate = MAX(ISNULL(CoolingOffExpirationDate,'1999-01-01')),
 		ModifiedOn = MAX(ISNULL(ModifiedOn,'1999-01-01')),
 		BusinessPartnerNumber  = MAX(ISNULL(BusinessPartnerNumber,'0')),
+		ParentInvoiceId  = MAX(ISNULL(ParentInvoiceId,'0')),
 		TrackingNumber  = MAX(ISNULL(TrackingNumber,'0')),
 		Carrier  = MAX(ISNULL(Carrier,''))
 	FROM #tempOrders
@@ -113,6 +120,7 @@ UPDATE w
 		,w.DeliveryOrderId = tmp.DeliveryOrderId
 		,w.InvoiceNumber = tmp.InvoiceNumber
 		,w.InvoiceDate = tmp.InvoiceDate
+		,w.ParentInvoiceId = tmp.ParentInvoiceId
 		,w.CoolingOffExpirationDate = tmp.CoolingOffExpirationDate
 		,w.ModifiedOn = tmp.ModifiedOn
 		,w.BusinessPartnerNumber = tmp.BusinessPartnerNumber
@@ -123,7 +131,15 @@ INNER JOIN cte_orders_update tmp
 	on tmp.OrderNo = w.OrderId
 
 
-DELETE w
+--DELETE w
+--FROM Wilson.dbo.[Order] w
+--INNER JOIN #tempOrders tmp 
+--	on tmp.OrderID = w.id and tmp.ToDelete = 1
+--select top 10 * from wilson.dbo.OrderTracking where orderid in (
+--SELECT orderid from #tempOrders where ToDelete = 1 and orderid = 9638799
+--)
+
+UPDATE w set w.Isdeleted = 1
 FROM Wilson.dbo.[Order] w
 INNER JOIN #tempOrders tmp 
 	on tmp.OrderID = w.id and tmp.ToDelete = 1
@@ -147,13 +163,15 @@ where OrderNo in (select OrderNo from #tempOrders where ToDelete = 1)
 UPDATE oi
 	SET  oi.OrderId = tmp.OrderID
 FROM Wilson.dbo.OrderItem oi
-INNER JOIN Wilson.dbo.[Order] o on o.Id = oi.OrderId
+INNER JOIN Wilson.dbo.[Order] o on o.Id = oi.OrderId and o.IsDeleted = 0
 INNER JOIN cte_orders_update tmp
 	on tmp.OrderNo = o.OrderId
 where 
 	tmp.OrderID <> oi.OrderId
-
-
+	AND
+	oi.Isdeleted = 0
+	AND
+	o.isdeleted = 0
 ----------------------------------------------------------------------------------------------------------------------
 -- Truncate temp table and select again the duplicates
 ---------------------------------------------------------------------------------------------------------------------
@@ -165,6 +183,7 @@ TRUNCATE TABLE #tempOrders
 	SELECT o.OrderId
 	from Wilson.dbo.[Order] o
 	--where (o.Orderid = @OrderID OR @OrderID = '')
+	Where IsDeleted = 0 --and orderid = '0407351373'
 	Group by OrderId
 	having count(*)>1
 ),
@@ -172,14 +191,18 @@ cte_items as
 (
 	SELECT o.id orderid, count(distinct oi.id) NumberItemRows
 	FROM Wilson.dbo.[Order] o
-	Left JOIN Wilson.dbo.OrderItem oi on oi.OrderId = o.Id
+	Left JOIN Wilson.dbo.OrderItem oi on oi.OrderId = o.Id and oi.IsDeleted = 0
 	INNER JOIN cte_orders cte on cte.OrderId = o.OrderId 
+	Where 
+		o.IsDeleted = 0 
 	GROUP BY o.id
 )
 INSERT INTO #tempOrders(OrderID,OrderNo,CreatedOn,ModifiedOn,NumberOrderItems,orderrank,DeliveryAddressId,InvoiceNumber,DeliveryOrderId,CoolingOffExpirationDate,InvoiceDate,BusinessPartnerNumber,TrackingNumber,Carrier)
 SELECT id,o.orderid,CreatedOn,ModifiedOn,ISNULL(cte.NumberItemRows,0), rank() over(partition by o.orderid order by CreatedOn asc, o.id asc), DeliveryAddressId,InvoiceNumber,DeliveryOrderId,CoolingOffExpirationDate,InvoiceDate,BusinessPartnerNumber,TrackingNumber,Carrier
 FROM Wilson.dbo.[Order] o
 INNER join cte_items cte on cte.OrderId = o.id
+WHERE
+	o.IsDeleted = 0
 
 -- set delete to the record with no orderitem
 UPDATE t
@@ -189,10 +212,18 @@ WHERE
 	NumberOrderItems =0 
 
 
-DELETE w
+--DELETE w
+--FROM Wilson.dbo.[Order] w
+--INNER JOIN #tempOrders tmp 
+--	on tmp.OrderID = w.id and tmp.ToDelete = 1
+
+
+Update w
+	Set w.IsDeleted = 1
 FROM Wilson.dbo.[Order] w
 INNER JOIN #tempOrders tmp 
 	on tmp.OrderID = w.id and tmp.ToDelete = 1
+
 
 ---DELETE FROM temp table the records already deleted
 DELETE tmp
@@ -212,6 +243,7 @@ where OrderNo in (select OrderNo from #tempOrders where ToDelete = 1)
 		FROM Wilson.dbo.OrderItem oi
 		INNER join Wilson.dbo.[Order] o  on oi.OrderId = o.id
 --	where (o.Orderid = @OrderID OR @OrderID = '')
+	Where oi.IsDeleted = 0 and o.IsDeleted =0 and o.orderid = '0407351373'
 	Group by oi.OrderId,oi.ArticleNumber,oi.OrderPosition,o.OrderId
 	having count(*)>1
 )
@@ -221,8 +253,17 @@ SELECT oi.id,oi.orderid,o.OrderId,oi.CreatedOn,oi.ModifiedOn,oi.ArticleNumber,oi
 FROM Wilson.dbo.OrderItem oi
 INNER join Wilson.dbo.[Order] o  on oi.OrderId = o.id
 INNER JOIN cte_orders ord on ord.ArticleNumber = oi.ArticleNumber and ord.OrderPosition = oi.OrderPosition and oi.OrderId = ord.OrderId
+WHERE
+	oi.IsDeleted = 0 and o.IsDeleted = 0
 
-DELETE oi
+--DELETE oi
+--FROM 
+--[Wilson].[dbo].OrderItem oi
+--inner join #tempOrderItem tmp on tmp.OrderItemID  = oi.Id
+--and tmp.OrderItemRank > 1
+
+UPDATE oi
+	SET oi.IsDeleted =1
 FROM 
 [Wilson].[dbo].OrderItem oi
 inner join #tempOrderItem tmp on tmp.OrderItemID  = oi.Id
@@ -230,20 +271,22 @@ and tmp.OrderItemRank > 1
 
 
 
+
+
 ----------------------------------------------------------------------------------------------------------------------
 -- Ritesh request: Update orderitems with quantity = 0 to 1
 ---------------------------------------------------------------------------------------------------------------------
 
-SELECT TOP 10 * from Wilson.dbo.orderitem where Quantity = 0
+--SELECT TOP 10 * from Wilson.dbo.orderitem where Quantity = 0
 
---UPDATE 
--- Wilson.dbo.orderitem
---SET Quantity = 1
--- where Quantity = 0
+----UPDATE 
+---- Wilson.dbo.orderitem
+----SET Quantity = 1
+---- where Quantity = 0
 
 
 
-select * 
-from Wilson.dbo.Order_bck20250305
-where orderid not in (select distinct orderid  
-from Wilson.dbo.[Order])
+--select * 
+--from Wilson.dbo.Order_bck20250305
+--where orderid not in (select distinct orderid  
+--from Wilson.dbo.[Order])
