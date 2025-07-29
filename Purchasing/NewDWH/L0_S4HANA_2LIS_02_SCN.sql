@@ -45,5 +45,10 @@ INSERT INTO [MD].[MD_L0_LOAD_LIST]
            ,'2024-01-01')
 
 update [MD].[MD_L0_LOAD_LIST]set [KeyColumns] = 'EBELN,EBELP,CNFNR,SCLNR' where [TableName] = 'L0_S4HANA_2LIS_02_SCN'
+update [MD].[MD_L0_LOAD_LIST]set [FolderPath] = 'curated/s4hana_theobald/cbp/2lis_02_scn', [PipelineLastRun] = '2025-03-01' where [TableName] = 'L0_S4HANA_2LIS_02_SCN'
 
 ---- select * INTO [TEST].[L0_S4HANA_2LIS_02_ITM] from [L0].[L0_S4HANA_2LIS_02_ITM]
+
+
+select count(*) from [L0].L0_S4HANA_2LIS_02_SCN 
+select count(*) from [TEST].L0_S4HANA_2LIS_02_SCN 

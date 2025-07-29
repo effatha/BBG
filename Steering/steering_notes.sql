@@ -42,6 +42,3 @@ select * from [L0].[L0_MI_BUSINESS_PLAN_COUNTRY_SHARE]
 -- Do you wnat to include Extra freight costs into shipment costs? --- include
 --- MEK 1400 -- how to deal
 
-
-
-

@@ -197,8 +197,9 @@ UPDATE itm SET
     ,itm.ZREFPS = bck.ZREFPS
     ,itm.ZCONTRACT_REFERENCE = bck.ZCONTRACT_REFERENCE
     ,itm.Load_timestamp = '2025-03-16' --- to be able to identify records updated
-FROM  TEST.L0_S4HANA_2LIS_02_ITM itm
-INNER JOIN TEST.L0_S4HANA_2LIS_02_ITM_FULL bck
+SELECT COUNT(*)
+FROM  L0.L0_S4HANA_2LIS_02_ITM itm
+INNER JOIN TEST.L0_S4HANA_2LIS_02_ITM bck
     on bck.ebeln =itm.ebeln 
     and 
        bck.ebelp =itm.ebelp
@@ -566,9 +567,9 @@ SELECT
     ,bck.ZREFBS
     ,bck.ZREFPS
     ,bck.ZCONTRACT_REFERENCE
-    ,LOAD_TIMESTAMP = '2025-03-15'
-FROM  TEST.L0_S4HANA_2LIS_02_ITM_FULL bck
-LEFT JOIN TEST.L0_S4HANA_2LIS_02_ITM itm
+    ,bck.LOAD_TIMESTAMP 
+FROM  TEST.L0_S4HANA_2LIS_02_ITM bck
+LEFT JOIN L0.L0_S4HANA_2LIS_02_ITM itm
     on bck.ebeln =itm.ebeln 
     and 
        bck.ebelp =itm.ebelp

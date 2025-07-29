@@ -86,3 +86,6 @@ INSERT INTO   [MD].[MD_L0_LOAD_LIST]
            ,('AUFNR,BUKRS,WERKS,MATNR,POSNR')
            ,'2024-01-01'
 		  )
+
+			UPDATE [MD].[MD_L0_LOAD_LIST] SET [FolderPath] = 'curated/s4hana_theobald/cbp/2lis_04_p_matnr'  where tablename like 'L0_S4HANA_2LIS_04_P_MATNR'
+		    select * from [MD].[MD_L0_LOAD_LIST] where tablename like 'L0_S4HANA_2LIS_04_P_MATNR'

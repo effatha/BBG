@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\wilson\\wilsn_fix_duplicates_final.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:wilson\\wilsn_fix_duplicates_final.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\procurement.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Purchasing\\procurement.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
     }
   ],
   "DocumentGroupContainers": [
@@ -59,14 +59,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "wilsn_fix_duplicates_final.sql - Wilson Azure.master (h.barbosa@go-bbg.com (130))",
-              "DocumentMoniker": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\wilson\\wilsn_fix_duplicates_final.sql",
-              "RelativeDocumentMoniker": "wilson\\wilsn_fix_duplicates_final.sql",
-              "ToolTip": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\wilson\\wilsn_fix_duplicates_final.sql - Wilson Azure.master (h.barbosa@go-bbg.com (130))*",
-              "RelativeToolTip": "wilson\\wilsn_fix_duplicates_final.sql - Wilson Azure.master (h.barbosa@go-bbg.com (130))*",
+              "Title": "procurement.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
+              "DocumentMoniker": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\procurement.sql",
+              "RelativeDocumentMoniker": "Purchasing\\procurement.sql",
+              "ToolTip": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\procurement.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
+              "RelativeToolTip": "Purchasing\\procurement.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-06-26T05:31:42.008Z",
-              "EditorCaption": " - Wilson Azure.master (h.barbosa@go-bbg.com (130))"
+              "WhenOpened": "2025-07-14T06:34:33.967Z",
+              "EditorCaption": " - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))"
             }
           ]
         },

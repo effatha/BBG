@@ -8,6 +8,7 @@ SELECT
   ,CASE WHEN OrderDocumentType='UB' THEN -1 ELSE BookingConfirmed END BookingConfirmed
   ,CASE WHEN LEFT(ItemNo,2)='11' THEN '10' ELSE LEFT(ItemNo,2) END + RIGHT(ItemNo,6) [ItemNo]
   ,CASE WHEN OrderDocumentType = 'UB' THEN 'Stock in Transfer' ELSE CASE WHEN BookingConfirmed = -1 THEN 'Booking is confirmed' ELSE 'Booking NOT Confirmed' END END [BookingStatus]
+--  ,ForwarderReference
   ,cast(CASE
     WHEN ETAWarehouse<=CAST(GETDATE()-1 as date)
  THEN DATEADD(dd,11,CAST(GETDATE()-1 as date))
@@ -33,6 +34,7 @@ SELECT
  'Z105',				--direct to FBA shipment
  'Z106'					--direct to FBA shipment
  )
+-- and plant=1100
 -- and BookingConfirmed=-1
   --and ProcessId='4501018791'
   --and itemno=10034227
@@ -41,6 +43,7 @@ SELECT
   ,CASE WHEN OrderDocumentType='UB' THEN -1 ELSE BookingConfirmed END
 ,CASE WHEN LEFT(ItemNo,2)='11' THEN '10' ELSE LEFT(ItemNo,2) END + RIGHT(ItemNo,6)
 ,CASE WHEN OrderDocumentType = 'UB' THEN 'Stock in Transfer' ELSE CASE WHEN BookingConfirmed = -1 THEN 'Booking is confirmed' ELSE 'Booking NOT Confirmed' END END
+--,ForwarderReference
 ,ETAWarehouse
        ,[ETD]
       ,[ETAPort]
@@ -52,13 +55,14 @@ SELECT
 ,'-1' as BookingConfirmed
 ,CASE WHEN LEFT(header.itemno,2)='11' THEN '10' ELSE LEFT(header.itemno,2) END + RIGHT(header.itemno,6) [ItemNo]
 ,'Booking is confirmed' as [BookingStatus]
+--,upper([ForwarderReferenceNumber]) as   ForwarderReference
 ,header.[ETAWareHouse]
 ,header.[ETD]
 ,isnull(header.[ETD],DATEADD(dd,-70,header.ETAWarehouse)) [calc_ETD]
 ,header.[ETAport]
 --,header.[ItemPriceForeignCurrency]
-,header.[ItemPrice] as OrderItemPrice
-,header.[Quantity] as [Open_QTY]
+,avg(case when header.[ItemPrice] = 0 then null else header.[ItemPrice] end) as OrderItemPrice
+,sum(header.[Quantity]) as [Open_QTY]
 --,header.[ValueForeignCurrency]
 --,header.[Value]
 FROM [CT dwh 03 Intelligence].[purch].[vFactVertical] header
@@ -66,6 +70,7 @@ FROM [CT dwh 03 Intelligence].[purch].[vFactVertical] header
 inner join(
 SELECT  
 [ProcessId]
+,dn.ItemNo
 FROM [CT dwh 03 Intelligence].[purch].[vFactVertical] vert
 --------------ProcessID to ProductionOrder---------------
 left join(
@@ -79,16 +84,31 @@ group by documentno
 --------------find ProductionOrder in Logistics temp---------------
 left join (
 select 
-[DeliveryNumber]
-FROM [CT dwh 03 Intelligence].[dbo].[tDeliveryNotesLogisticsTemp]
+temp.[DeliveryNumber]
+,bom.ItemNo
+FROM [CT dwh 03 Intelligence].[dbo].[tDeliveryNotesLogisticsTemp] temp
+  left join (
+  select
+  [ItemNo],
+  [BOMComponent]
+  from [CT dwh 03 Intelligence].[purch].[vDimBOMItem]
+  where
+  Plant=1000
+  and DeletionIndicator=0
+  and left([ItemNo],2)='10'
+  group by 
+  [ItemNo],
+  [BOMComponent]
+  ) bom on temp.DeliveryItemNo=bom.BOMComponent
 WHERE [DeliveryType]='DIG'
 AND DeliveryDistributionStatus<>'C'
 AND DeliveryDistributionStatus<>''
 AND ISNULL([ProductionOrderNo],'') <>''
 AND Quantity>0
-group by [DeliveryNumber]
+group by [DeliveryNumber],bom.ItemNo
 )dn on dn.DeliveryNumber = vert.[DeliveryNo]
 where 1=1
+--and plant=1100
 and [DeliveryNo] not in (
 '0180000065',
 '0180002585',
@@ -114,9 +134,18 @@ and [TransactionTypeDetail]='ProductionOrder'
 and dn.DeliveryNumber is not null
 group by 
 [ProcessId]
+,dn.ItemNo
 )relevant on relevant.ProcessId=header.ProcessId
+and relevant.ItemNo=CASE WHEN LEFT(header.itemno,2)='11' THEN '10' ELSE LEFT(header.itemno,2) END + RIGHT(header.itemno,6)
 where header.[TransactionTypeDetail] ='Order'
 and header.[ETAWareHouse] != '0001-01-01'
 and left(header.itemno,2)='11'
---and header.ProcessId='4501019466'
+group by
+header.[ProcessId]
+,CASE WHEN LEFT(header.itemno,2)='11' THEN '10' ELSE LEFT(header.itemno,2) END + RIGHT(header.itemno,6)
+--,upper([ForwarderReferenceNumber])
+,header.[ETAWareHouse]
+,header.[ETD]
+,isnull(header.[ETD],DATEADD(dd,-70,header.ETAWarehouse)) 
+,header.[ETAport]
 )ful

@@ -15,7 +15,7 @@ WITH CTE_CALENDAR_ITEM AS (
   CROSS JOIN L1.L1_DIM_A_ITEM it
   WHERE
 	YEAR(cal.DATE) = 2025
-	AND MONTH(cal.DATE) = 3
+	AND MONTH(cal.DATE) = 6
 	AND it.CD_SOURCE_SYSTEM = 'SAP'
 ),
 CTE_STOCK AS (
@@ -47,7 +47,7 @@ CTE_FORECAST AS (
 															) -- Cumulative sum of quantity by item
 	FROM L1.L1_FACT_F_BOTTOM_LINE_FORECAST bs
 	WHERE 1=1
-		AND MONTH(bs.D_TARGET) = 3
+		AND MONTH(bs.D_TARGET) = 6
 		AND  bs.D_TARGET>=cast(GETDATE() AS DATE)
 		--and num_item = '10007485'
 	GROUP BY D_TARGET,NUM_ITEM
@@ -68,6 +68,4 @@ LEFT JOIN CTE_FORECAST fc
 		AND base.[TargetDay] = fc.D_TARGET
 
 
-
-		select sum(AMT_) from [L1].L1_FACT_A_AMAZON_ITEM_ATTRIBUTION 
-		where CD_ITEM like '6%'
+		65
