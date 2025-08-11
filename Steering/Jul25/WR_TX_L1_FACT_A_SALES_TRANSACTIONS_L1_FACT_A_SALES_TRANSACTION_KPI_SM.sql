@@ -142,9 +142,9 @@ BEGIN
 			,(ABS(ISNULL(AMT_TAX_PRICE_EUR,0))   )* VL_VALUE_ADDED_TAX_PARAM		AS ValueAddedTax
 			,(ABS(ISNULL(AMT_NET_DISCOUNT_EUR,0))   )* VL_ORDER_DISCOUNTS_PARAM		AS OrderDiscounts
 			,(ISNULL(AMT_NET_SHIPPING_REVENUE_EUR,0)   )* VL_ORDER_CHARGES_PARAM	AS OrderCharges
-			,ISNULL(fact.VL_REFUND_RATE,0)											AS RefundRate
+			,ISNULL(fact.VL_REFUND_RATE,rrr.VL_REFUND_RATE)											AS RefundRate
 			,ISNULL(cll.VL_RATE,0)													AS CancellRate
-			,ISNULL(fact.VL_RETURN_RATE,0)											AS ReturnRate
+			,ISNULL(fact.VL_RETURN_RATE,rrr.VL_RETURN_RATE)											AS ReturnRate
 			-- PC1 kpis
 			,ISNULL(costs.AMT_DEMURRAGE_DETENTION_EUR  / dvol.VL_TOTAL_VOLUME * (fact.VL_ITEM_QUANTITY * item.VL_VOLUME),0) * kpi.VL_DEMURRAGE_DETENTION_PARAM							AS DemurrageDetention
 			,ISNULL(costs.AMT_DEADFREIGHT_EUR / dvol.VL_TOTAL_VOLUME * (fact.VL_ITEM_QUANTITY * item.VL_VOLUME),0) * kpi.VL_DEAD_FREIGHT_PARAM											AS Deadfreight
@@ -189,8 +189,8 @@ BEGIN
 			,LEAST(item.VL_VOLUME * isnull(opex.[AMT_OPEX_COST_M3_EUR], 0) / (CASE WHEN item.cd_unit_volume='CCM' THEN 1000000 WHEN item.cd_unit_volume='M3' THEN 1 END)
 			, (2 * opex_max.[AMT_OPEX_COST_M3_EUR]))  
 																	AS WarehousingOpexEst_PreCalc
-			,ISNULL(fact.VL_REPLACEMENT_RATE,0)							AS ReplacementProductCostEst_PreCal
-			,ISNULL(fact.VL_REPLACEMENT_RATE,0)					AS ReplacementOrderQuantityEst_PreCal
+			,ISNULL(fact.VL_REPLACEMENT_RATE,rrr.VL_REPLACEMENT_RATE)							AS ReplacementProductCostEst_PreCal
+			,ISNULL(fact.VL_REPLACEMENT_RATE,rrr.VL_REPLACEMENT_RATE)					AS ReplacementOrderQuantityEst_PreCal
 	        ,dimchannel.[CD_CHANNEL_GROUP_1]						AS CD_CHANNEL_GROUP_1
 			,dimchannel.[CD_CHANNEL_GROUP_3]						AS CD_CHANNEL_GROUP_3
 
@@ -406,9 +406,16 @@ BEGIN
 		AND repack.CD_ENVIRO_CATEGORY = 'Packaging'
 		--join fx rate for enviro
 		LEFT JOIN [L1].[L1_FACT_F_FX_RATE] enviro_rate
-		ON env.cd_currency=enviro_rate.cd_currency
-		AND Year(fact.D_CREATED)=Year(enviro_rate.D_EFFECTIVE)
-		AND Month(fact.D_CREATED)=Month(enviro_rate.D_EFFECTIVE)
+			ON env.cd_currency=enviro_rate.cd_currency
+			AND Year(fact.D_CREATED)=Year(enviro_rate.D_EFFECTIVE)
+			AND Month(fact.D_CREATED)=Month(enviro_rate.D_EFFECTIVE)
+
+		LEFT JOIN [L1].[L1_FACT_A_NOV_CLAIM_RATES] rrr
+			ON rrr.id_item = fact.ID_ITEM
+			AND fact.D_CREATED BETWEEN rrr.d_valid_from and rrr.d_valid_to
+			AND (rrr.CD_COUNTRY_INVOICE_GROUP is null OR rrr.CD_COUNTRY_INVOICE_GROUP = cmi.INVOICECOUNTRYGROUP)
+			AND (rrr.CD_COUNTRY_DELIVERY IS null OR rrr.CD_COUNTRY_DELIVERY = fact.CD_COUNTRY_DELIVERY)
+			AND (rrr.CD_CHANNEL_GROUP_3 is null OR REPLACE(rrr.CD_CHANNEL_GROUP_3,' ','') = REPLACE(dimchannel.CD_CHANNEL_GROUP_3,' ',''))   
 		WHERE 
 			(item.NUM_ITEM NOT LIKE '7%' OR ID_ITEM_PARENT IS NOT NULL )
 			AND item.NUM_ITEM NOT LIKE '6%'
@@ -989,5 +996,12 @@ BEGIN
 		,AMT_GROSS_MARGIN_EST_EUR
 
 FROM CTE_SALES_L11
+
+
+
+EXEC [TEST].WR_TX_L1_FACT_A_GOOGLE_ADS_PERFORMANCE_CAMPAIGN_L1_FACT_A_SALES_TRANSACTION_KPI_SM
+
+EXEC [TEST].WR_TX_L1_FACT_A_D2C_PERFORMANCE_ITEM_L1_FACT_A_SALES_TRANSACTION_KPI_SM
+EXEC [TEST].[WR_TX_L1_FACT_A_AMAZON_ITEM_COST_L1_FACT_A_SALES_TRANSACTION_KPI]
 
 END

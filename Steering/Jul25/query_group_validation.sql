@@ -1,35 +1,37 @@
 
-SELECT 'SMPnL',ChannelGroup3,
-	GrossOrderValue			= SUM(GrossOrderValue),
-	NetOrderValue			= SUM(NetOrderValueEst),
-	RefundOrderValue		= SUM(abs(RefundedOrderValueEst)),
-	[Refund %]				= SUM(Abs(RefundedOrderValueEst)) / SUM(GrossOrderValue),
-	FullNetProductCostSM	= SUM(abs(FullNetProductCostSM)),
-	[NetProductCost %]		=  SUM(abs(FullNetProductCostSM)) / SUM(NetOrderValueEst),
-	Revenue = SUM(abs(RevenueEst)),
-	ShippingCost = SUM(abs(FulfillmentOutboundEst)),
-	[ShippingCost %] = SUM(abs(FulfillmentOutboundEst))/ SUM(NetOrderValueEst),
-	Marketing = SUM(abs(MarketingAttributionEstSM)),
-	[Marketing %] = SUM(abs(MarketingAttributionEstSM))/ SUM(NetOrderValueEst),
-	Commissions = SUM(abs(CommissionsEstSM)),
-	[Commissions %] = SUM(abs(CommissionsEstSM))/ SUM(NetOrderValueEst),
-	EnviroLicenseCostEst = SUM(EnviroLicenseCostEst),
-	[EnviroLicenseCostEst %] = SUM(EnviroLicenseCostEst)/ SUM(NetOrderValueEst),
-	GrossMargin = SUM(GrossMargin),
-	[GrossMargin %]= SUM(GrossMargin)/ SUM(RevenueEst),
-	SteeringMargin = SUM(SteeringMarginEstSM),
-	[SteeringMargin %] = SUM(SteeringMarginEstSM)/ SUM(RevenueEst)
+SELECT distinct f.ChannelGroup3,Channel
+	--GrossOrderValue			= SUM(GrossOrderValue),
+	--NetOrderValue			= SUM(NetOrderValueEst),
+	--RefundOrderValue		= SUM(abs(RefundedOrderValueEst)),
+	----[Refund %]				= SUM(Abs(RefundedOrderValueEst)) / SUM(GrossOrderValue),
+	--FullNetProductCostSM	= SUM(abs(FullNetProductCostSM))
+	--[NetProductCost %]		=  SUM(abs(FullNetProductCostSM)) / SUM(NetOrderValueEst)
+	--Revenue = SUM(abs(RevenueEst)),
+	--ShippingCost = SUM(abs(FulfillmentOutboundEst)),
+	--[ShippingCost %] = SUM(abs(FulfillmentOutboundEst))/ SUM(NetOrderValueEst),
+	--Marketing = SUM(abs(MarketingAttributionEstSM)),
+	--[Marketing %] = SUM(abs(MarketingAttributionEstSM))/ SUM(NetOrderValueEst),
+	--Commissions = SUM(abs(CommissionsEstSM)),
+	--[Commissions %] = SUM(abs(CommissionsEstSM))/ SUM(NetOrderValueEst),
+	--EnviroLicenseCostEst = SUM(EnviroLicenseCostEst),
+	--[EnviroLicenseCostEst %] = SUM(EnviroLicenseCostEst)/ SUM(NetOrderValueEst),
+	--GrossMargin = SUM(GrossMargin),
+	--[GrossMargin %]= SUM(GrossMargin)/ SUM(RevenueEst),
+	--SteeringMargin = SUM(SteeringMarginEstSM),
+	--[SteeringMargin %] = SUM(SteeringMarginEstSM)/ SUM(RevenueEst)
 FROM 
-	[TEST].[PL_V_SALES_TRANSACTIONS_SM]
+	[TEST].[PL_V_SALES_TRANSACTIONS_SM] f
+	inner join pl.pl_v_sales_channel c on c.channelid = f.channelid
 WHERE 
-	TRANSACTIOnYEAR = 2024
-	--AND TransactionMonth = 2
-	AND DeliveryCountryGroup = 'DE'
-	and channelgroup3= 'Shop WE'
-GROUP BY TransactionMonth,ChannelGroup3
+	TRANSACTIOnYEAR = 2025
+	--AND TransactionMonth = 11
+--	AND DeliveryCountryGroup = 'DE'
+	and f.channelgroup3= 'Others'
+GROUP BY TransactionMonth,f.ChannelGroup3,Channel
 
-SELECT 'Plan',ChannelGroup3,
+SELECT 'Plan',TargetYear,
 	GrossOrderValue = SUM(GrossOrderValue),
+	NetOrderquantity = SUM(NetOrderquantityEst),
 	NetOrderValue = SUM(NetOrderValueEst),
 	RefundOrderValue = SUM(ABS(RefundedOrderValueEst)),
 	[Refund %] = SUM(Abs(RefundedOrderValueEst)) / SUM(GrossOrderValue),
@@ -52,15 +54,17 @@ FROM
 	[TEST].PL_V_BUSINESS_PLAN_KPI_SM
 	
 WHERE 
-	TargetYear = 2025
-	AND TargetMonth = 2
-	AND Country ='DE'
-	and channelgroup3= 'Shop WE'
+	TargetYear = 2026
+	--AND TargetMonth = 2
+	--AND Country ='DE'
+	--and channelgroup3= 'Shop WE'
 
-GROUP BY TargetMonth,ChannelGroup3
+GROUP BY TargetYear--,ChannelGroup3
 
-
-
+Select distinct TargetDAte
+FROM 
+	[TEST].PL_V_BUSINESS_PLAN_KPI_SM
+order by 1
 
 
 with bp_global as (
