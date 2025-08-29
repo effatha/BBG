@@ -1,0 +1,62 @@
+CREATE VIEW PL.PL_V_DAILY_GB_ORDERS
+AS
+    
+    SELECT 
+     'SAP' as [Source]
+    ,VAITM.KUNNR as [CustomerID]
+    ,VAITM.BSTKD as [CustomerReference]
+    ,MAX(CAST(VAITM.ERDAT AS DATETIME) + CAST(CONCAT(SUBSTRING(VAITM.ERZET, 1, 2), ':', SUBSTRING(VAITM.ERZET, 3, 2), ':', SUBSTRING(VAITM.ERZET, 5, 2)) AS DATETIME)) AS [OrderCreationDateTime]
+    ,VAITM.ERDAT as [TransactionDate]
+    ,VAITM.VBELN as [DocumentNo]
+    ,CAST(VAITM.MATNR as INT) ItemNo
+    ,channel.T_SALES_CHANNEL as [Channel]
+    ,channel.CD_CHANNEL_GROUP_1 as [ChannelGroupI]
+    ,channel.CD_CHANNEL_GROUP_2 as [ChannelGroupII]
+    ,VBPAWE.LAND1 AS DeliveryCountry
+    ,stor.TXTMD AS StorageLocation
+    ,SUM(VAITM.NETPR) As OrderValue
+    ,SUM(VAITM.KWMENG) As Quantity
+    ,VAITM.WAERK as [Currency]
+    ,MAX(VAITM.LOAD_TIMESTAMP) as [LastModified]
+FROM [L0].[L0_S4HANA_2LIS_11_VAITM] VAITM
+LEFT JOIN L1.L1_DIM_A_SALES_CHANNEL channel 
+    ON VAITM.[VKBUR]=channel.CD_SALES_CHANNEL AND channel.CD_SOURCE_SYSTEM='SAP'
+
+LEFT JOIN (SELECT VBELN, KUNNR, LAND1,LOAD_TIMESTAMP, ROW_NUMBER() OVER (PARTITION BY VBELN ORDER BY POSNR DESC) as rownum FROM L0.L0_S4HANA_Z_SD_VBPA_V2
+			WHERE PARVW='WE') VBPAWE ON VAITM.VBELN = VBPAWE.VBELN and VBPAWE.rownum=1
+-- Storage location
+	LEFT JOIN [L0].[L0_S4HANA_0STOR_LOC_TEXT] stor ON stor.LGORT=VAITM.LGORT
+    AND stor.WERKS=VAITM.WERKS
+WHERE 1=1
+AND VAITM.ERDAT >= cast(GETDATE()-1 as date)
+AND VAITM.[AUART] in ('ZAA','ZAZ','ZKE') 
+AND (channel.T_SALES_CHANNEL like '%.uk' OR channel.T_SALES_CHANNEL in ('hifi-tower','hifi-tower-deals'))
+--AND VBPAWE.LAND1 = 'GB'
+--and CAST(VAITM.MATNR as INT) like '1%'
+and ROCANCEL<> 'R'
+GROUP BY 
+     VAITM.VBELN
+    ,VAITM.KUNNR 
+    ,VAITM.BSTKD 
+	,VAITM.ERDAT
+    ,VAITM.WAERK
+	,channel.T_SALES_CHANNEL
+    ,channel.CD_CHANNEL_GROUP_1 
+    ,channel.CD_CHANNEL_GROUP_2 
+    ,VBPAWE.LAND1
+    ,stor.TXTMD 
+    ,CAST(VAITM.MATNR as INT) 
+--ORDER BY     MAX(CAST(VAITM.ERDAT AS DATETIME) + CAST(CONCAT(SUBSTRING(VAITM.ERZET, 1, 2), ':', SUBSTRING(VAITM.ERZET, 3, 2), ':', SUBSTRING(VAITM.ERZET, 5, 2)) AS DATETIME)) DESC
+
+
+   -- SELECT TOP 10 *  FROM [L0].[L0_S4HANA_2LIS_11_VAITM] VAITM
+
+
+	select 
+		TOP 10 *
+	FROM pl.PL_V_DETAILED_STOCK 
+	WHERE 1=1
+		AND 
+		StockType IN ('PHYSICAL STOCK','InTransit','CONSIGNMENT STOCK')
+        and StorageLocationName = 'Lager UK'
+	--GROUP BY ItemNo

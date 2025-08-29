@@ -1,4 +1,4 @@
-/****** Object:  View [TEST].[PL_V_BUSINESS_PLAN_KPI_SM]    Script Date: 24/07/2025 11:59:55 ******/
+/****** Object:  View [TEST].[PL_V_BUSINESS_PLAN_KPI_SM]    Script Date: 29/08/2025 13:37:19 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -24,9 +24,9 @@ ALTER VIEW [TEST].[PL_V_BUSINESS_PLAN_KPI_SM] AS (
 	  ,Fulfillment					= CD_FULFILLMENT
 	  ,StorageLocation				= T_REVISED_LOCATION
 	  ,Country						= CASE
-											WHEN CD_COUNTRY_GROUP IN('FR','DE','IT','ES','GB','INT') THEN CD_COUNTRY_GROUP
-											WHEN CD_COUNTRY_GROUP IN('NL') THEN 'INT'
+											WHEN CD_COUNTRY_GROUP IN('FR','DE','IT','ES','GB','INT','NL') THEN CD_COUNTRY_GROUP
 											ELSE 'CEE' END
+	  ,CountryGroup						= CD_COUNTRY_GROUP
 	  ,Currency						= CD_CURRENCY
 	  ,ShippingCostEst				= AMT_SHIPPING_COST_EST_EUR
 	---kpi--QTY

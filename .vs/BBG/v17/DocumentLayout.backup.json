@@ -5,6 +5,14 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\procurement.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Purchasing\\procurement.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\NewDWH\\L0_MI_PURCH_SUPPLIER_SETTINGS.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Purchasing\\NewDWH\\L0_MI_PURCH_SUPPLIER_SETTINGS.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\NewDWH\\L0_MI_PROCUREMENT_SETTINGS.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Purchasing\\NewDWH\\L0_MI_PROCUREMENT_SETTINGS.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
     }
   ],
   "DocumentGroupContainers": [
@@ -13,8 +21,8 @@
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedWidth": 111,
-          "SelectedChildIndex": 10,
+          "DockedWidth": 158,
+          "SelectedChildIndex": 11,
           "Children": [
             {
               "$type": "Bookmark",
@@ -58,6 +66,18 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "L0_MI_PURCH_SUPPLIER_SETTINGS.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
+              "DocumentMoniker": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\NewDWH\\L0_MI_PURCH_SUPPLIER_SETTINGS.sql",
+              "RelativeDocumentMoniker": "Purchasing\\NewDWH\\L0_MI_PURCH_SUPPLIER_SETTINGS.sql",
+              "ToolTip": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\NewDWH\\L0_MI_PURCH_SUPPLIER_SETTINGS.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
+              "RelativeToolTip": "Purchasing\\NewDWH\\L0_MI_PURCH_SUPPLIER_SETTINGS.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-08-13T11:06:34.095Z",
+              "EditorCaption": " - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
               "Title": "procurement.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
               "DocumentMoniker": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\procurement.sql",
@@ -65,7 +85,19 @@
               "ToolTip": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\procurement.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
               "RelativeToolTip": "Purchasing\\procurement.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-07-14T06:34:33.967Z",
+              "WhenOpened": "2025-08-13T07:38:07.71Z",
+              "EditorCaption": " - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "L0_MI_PROCUREMENT_SETTINGS.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))",
+              "DocumentMoniker": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\NewDWH\\L0_MI_PROCUREMENT_SETTINGS.sql",
+              "RelativeDocumentMoniker": "Purchasing\\NewDWH\\L0_MI_PROCUREMENT_SETTINGS.sql",
+              "ToolTip": "C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG\\Purchasing\\NewDWH\\L0_MI_PROCUREMENT_SETTINGS.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))*",
+              "RelativeToolTip": "Purchasing\\NewDWH\\L0_MI_PROCUREMENT_SETTINGS.sql - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))*",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-08-13T09:29:54.061Z",
               "EditorCaption": " - synw-bbg-dwh-weu-prd-01.sql.azuresynapse.net.syndpbbgdwh01 (h.barbosa@go-bbg.com (0))"
             }
           ]

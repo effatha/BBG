@@ -1,0 +1,124 @@
+
+--/****** Object:  StoredProcedure [TEST].[WR_TX_L1_FACT_A_SALES_TRANSACTIONS_L1_FACT_A_SALES_TRANSACTION_KPI_SM]    Script Date: 22/08/2025 11:53:46 ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE PROC [TEST].WR_TX_PL_V_MARKETING_L1_FACT_A_SALES_TRANSACTION_KPI_SM AS
+--BEGIN
+--	--DELETE FROM KPI TABLE JUST THE SAP AND SAGE TRANSACTIONS
+--	--TRUNCATE TABLE  [TEST].[L1_FACT_A_SALES_TRANSACTION_KPI_SM]
+with cte_sm_table as
+(
+	SELECT s.*,it.T_PRODUCT_HIERARCHY_4,CD_CHANNEL_GROUP_3 = REPLACE(ch.[CD_CHANNEL_GROUP_3],' ',''),
+							  it.NUM_ITEM
+	FROM TEST.L1_FACT_A_SALES_TRANSACTION_KPI_SM s
+	INNER JOIN L1.L1_DIM_A_ITEM it on it.ID_ITEM = s.ID_ITEM
+	LEFT JOIN L1.L1_DIM_A_SALES_CHANNEL ch on ch.ID_SALES_CHANNEL = s.ID_SALES_CHANNEL
+WHERE 1=1
+	and s.D_CREATED between '2025-01-01' and '2025-08-30'
+	--and 
+	--it.T_PRODUCT_HIERARCHY_4 = 'Karaffe'
+	and
+	ch.CD_CHANNEL_GROUP_3 not in ('Others')
+		
+),CTE_TOTAL_NOV AS
+(
+	SELECT *,
+		AMT_TOTAL_NOV_FAMILY_EUR = SUM(ISNULL(AMT_NET_ORDER_VALUE_EST_EUR,0)) 
+					OVER(PARTITION BY T_PRODUCT_HIERARCHY_4, D_CREATED ,[CD_CHANNEL_GROUP_3] )
+		,PERC_NOV_FAMILY_SHARE = CASE WHEN AMT_NET_ORDER_VALUE_EST_EUR = 0 THEN 0 ELSE AMT_NET_ORDER_VALUE_EST_EUR / SUM(ISNULL(AMT_NET_ORDER_VALUE_EST_EUR,0)) 
+					OVER(PARTITION BY T_PRODUCT_HIERARCHY_4, D_CREATED ,[CD_CHANNEL_GROUP_3] )END
+		,AMT_TOTAL_NOV_ITEM_EUR = SUM(ISNULL(AMT_NET_ORDER_VALUE_EST_EUR,0)) 
+					OVER(PARTITION BY NUM_ITEM, D_CREATED ,[CD_CHANNEL_GROUP_3] )
+		,PERC_NOV_ITEM_SHARE = CASE WHEN AMT_NET_ORDER_VALUE_EST_EUR = 0 THEN 0 ELSE AMT_NET_ORDER_VALUE_EST_EUR / SUM(ISNULL(AMT_NET_ORDER_VALUE_EST_EUR,0)) 
+					OVER(PARTITION BY NUM_ITEM, D_CREATED ,[CD_CHANNEL_GROUP_3] )END
+
+	FROM cte_sm_table
+	 
+
+
+),cte_agg_mkt_fam as
+(
+	SELECT
+		TransactionPeriod = TransactionDate ,
+		ProductFamily,
+		ChannelGroup3,
+		MarketingAmazon = SUM(ISNULL(MarketingAmazon,0)),
+		MarketingGoogle = SUM(ISNULL(MarketingGoogle,0)),
+		MarketingD2C = SUM(ISNULL(MarketingD2C,0))
+
+	FROM TEST.PL_V_MARKETING_COST_SM_v2
+	GROUP BY 
+		TransactionDate ,
+		ProductFamily,
+		ChannelGroup3
+		
+),cte_agg_mkt_item as
+(
+	SELECT
+		TransactionPeriod = TransactionDate ,
+		ItemNo,
+		ChannelGroup3,
+		MarketingAmazon = SUM(ISNULL(MarketingAmazon,0)),
+		MarketingGoogle = SUM(ISNULL(MarketingGoogle,0)),
+		MarketingD2C = SUM(ISNULL(MarketingD2C,0))
+
+	FROM TEST.PL_V_MARKETING_COST_SM_ITEM
+	GROUP BY 
+		TransactionDate ,
+		ItemNo,
+		ChannelGroup3
+		
+), CTE_MKT_COST AS
+(
+
+SELECT s.*
+		,AMT_MAKETING_AMAZON_COST_EUR = ISNULL(mkt_fam.MarketingAmazon * PERC_NOV_FAMILY_SHARE,0) +  ISNULL(mkt_item.MarketingAmazon * PERC_NOV_ITEM_SHARE,0)
+		,AMT_MAKETING_GGL_COST_EUR = ISNULL(mkt_fam.MarketingGoogle * PERC_NOV_FAMILY_SHARE,0)+  ISNULL(mkt_item.MarketingGoogle * PERC_NOV_ITEM_SHARE,0)
+		,AMT_MAKETING_D2C_COST_EUR = ISNULL(mkt_fam.MarketingD2C * PERC_NOV_FAMILY_SHARE,0)+  ISNULL(mkt_item.MarketingD2C * PERC_NOV_ITEM_SHARE,0)
+	FROM CTE_TOTAL_NOV s
+	LEFT JOIN cte_agg_mkt_fam mkt_fam 
+			on  
+				mkt_fam.TransactionPeriod = D_CREATED
+				AND
+				mkt_fam.ProductFamily = T_PRODUCT_HIERARCHY_4
+				AND
+				mkt_fam.ChannelGroup3 = [CD_CHANNEL_GROUP_3]
+				
+	LEFT JOIN cte_agg_mkt_item mkt_item 
+			on  
+				mkt_item.TransactionPeriod = D_CREATED
+				AND
+				mkt_item.ItemNo = s.NUM_ITEM
+				AND
+				mkt_item.ChannelGroup3 = [CD_CHANNEL_GROUP_3]
+
+
+)
+
+SELECT
+	--s.*
+	TransactionMonth = MONTH(D_CREATED),
+	NOV = SUM(AMT_NET_ORDER_VALUE_EST_EUR),
+	MarketingEst = SUM(ISNULL(AMT_MARKETING_ATTRIBUTION_EST_EUR,0)),
+	MarketingCostAtributed =  sum(ISNULL(AMT_MAKETING_AMAZON_COST_EUR,0) + ISNULL(AMT_MAKETING_GGL_COST_EUR,0)+ISNULL(AMT_MAKETING_D2C_COST_EUR,0))
+	--,AMT_STEERING_MARGIN_WITH_MKT_EST_EUR = ISNULL(AMT_STEERING_MARGIN_EST_EUR,0) + ISNULL(AMT_MARKETING_ATTRIBUTION_EST_EUR,0) -
+	--											(ISNULL(AMT_MAKETING_AMAZON_COST_EUR,0) + ISNULL(AMT_MAKETING_GGL_COST_EUR,0)+ISNULL(AMT_MAKETING_D2C_COST_EUR,0))
+
+FROM CTE_MKT_COST s
+GROUP BY MONTH(D_CREATED)
+order by 1
+
+
+
+
+
+
+--marketing atribtuion
+--	- family
+--	- item level where family is null
+--	- view summary on monthly level
+
+-----------
+

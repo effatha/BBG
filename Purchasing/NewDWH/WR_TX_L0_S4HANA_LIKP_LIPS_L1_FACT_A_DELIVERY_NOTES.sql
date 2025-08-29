@@ -149,3 +149,6 @@ select count(*)  FROM  [TEST].[L0_S4HANA_Z_MM_LIKP_LIPS] AS A
 select count(*)  FROM  [L0].[L0_S4HANA_Z_MM_LIKP_LIPS] AS A 
 
 --14.496.590
+
+
+select * from [TEST].[PL_V_FUTURE_INBOUND] where processid = '4501021898'

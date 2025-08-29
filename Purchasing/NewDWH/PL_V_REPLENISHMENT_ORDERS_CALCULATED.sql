@@ -1,17 +1,11 @@
-/*********************************************************
-select top 10 *
-FROM L1.L1_FACT_F_STOCK
-**********************************************************/
+/******************************************
+** TODO: create a second setting for default time for transit time port-> WH
+** Take in consideration that there might be an confirmed order after the OOS DATE
+*******************************************/
 
-DECLARE @Itemno VARCHAR(50) = ''
+ALTER VIEW TEST.PL_V_REPLENISHMENT_ORDERS_CALCULATED
+AS
 
---SELECT * FROM l1.l1_dim_a_item where cd_item_group = 'CK3' num_item = 10034774
--- select * from Pl.PL_V_ITEM where itemno = '10046293'
-/*********************************************************
-REPLENISHEMENT based on the stock development
-**********************************************************/
-
- 
 WITH CTE_OOS_DATE AS (
 SELECT 
 	NUM_ITEM,
@@ -57,8 +51,8 @@ SELECT
 	ETAWarehouse = DATEADD(day,ISNULL(l2.STOCKOVERLAP,cl.STOCKOVERLAP) * -1 ,OOSDate), -- calculate the overlap period
 	MaxReplenishmentDate = DATEADD(day,ISNULL(l2.FCCOVERAGE,cl.FCCOVERAGE),OOSDate), --- how many days in the future should this cover
 	ETAPort = DATEADD(day,(ISNULL(l2.STOCKOVERLAP,cl.STOCKOVERLAP)  + ISNULL(sup.TRANSITTIMEINDAYS, cast(etaport.Value as int)))* -1 ,OOSDate),
-	ETD = DATEADD(day,(ISNULL(l2.STOCKOVERLAP,cl.STOCKOVERLAP)  + etd.Value)* -1 ,OOSDate),
-	NextOrderDate = DATEADD(day,(ISNULL(l2.STOCKOVERLAP,cl.STOCKOVERLAP)  + ISNULL(sup.TRANSITTIMEINDAYS, etaport.Value) +cast(ISNULL(itd.DT_PLANNED_DELIVERY_TIME,plead.Value) as int))* -1 ,OOSDate) ,
+	ETD = DATEADD(day,(ISNULL(l2.STOCKOVERLAP,cl.STOCKOVERLAP)  + cast(etd.Value as int))* -1 ,OOSDate),
+	NextOrderDate = DATEADD(day,(ISNULL(l2.STOCKOVERLAP,cl.STOCKOVERLAP)  + ISNULL(sup.TRANSITTIMEINDAYS, cast(etaport.Value as int)) +cast(ISNULL(itd.DT_PLANNED_DELIVERY_TIME,cast(plead.Value as int)) as int))* -1 ,OOSDate) ,
 	ItemPriceFC = price.NetPrice,
 	ItemPriceCurrency = price.Currency,
 	ItemPriceEUR  = CASE WHEN price.NetPrice IS NULL THEN (mek.MEKHedging/1+(lcost.value)) ELSE price.NetPrice / fx.FX_rates END,
@@ -71,8 +65,7 @@ SELECT
 	DEPOSIT_PERC,
 	PAYMENT_TERM,
 	CurrencyRate = fx.FX_rates,
-
-
+	LandingCostPaymentDays = cast(lcostDays.Value as int)
 FROM CTE_OOS_DATE oos
 INNER JOIN L1.L1_DIM_A_ITEM it
 	on it.NUM_ITEM = oos.NUM_ITEM
@@ -91,7 +84,6 @@ LEFT JOIN L0.[L0_MI_PROCUREMENT_SETTINGS] etd on etd.setting_name = 'ETDTransit'
 LEFT JOIN L0.[L0_MI_PROCUREMENT_SETTINGS] plead on plead.setting_name = 'ProdLeadTime'
 LEFT JOIN L0.[L0_MI_PROCUREMENT_SETTINGS] lcost on lcost.setting_name = 'LandingCosts'
 LEFT JOIN L0.[L0_MI_PROCUREMENT_SETTINGS] lcostDays on lcostDays.setting_name = 'LandingCostsPaymentDays'
-
 LEFT JOIN TEST.L0_MI_PURCH_SUPPLIER_SETTINGS sup on sup.Supplier_code = it.cd_item_group
 LEFT JOIN CTE_ITEM_PRICE price 
 	ON price.ItemNo = oos.NUM_ITEM and rk = 1
@@ -107,7 +99,8 @@ LEFT JOIN TEST.L1_FACT_A_STOCK_DEVELOPMENT stfcd ---- Join to get the cumulative
 --ORDER BY OOSDATE DESC
 )
 SELECT
-	NUM_ITEM,
+	TypeRepleshiment = 'Calculated',
+	ItemNo = NUM_ITEM,
 	OOSDate,
 	ETAWarehouse,
 	MaxReplenishmentDate,
@@ -118,92 +111,27 @@ SELECT
 	ItemPriceCurrency,
 	ItemPriceEUR  ,
 	RepleshmentQTY ,
-	LandingCostsEUR = ItemPriceEUR * LandingCostRate,
+	LandingCostsEUR = (RepleshmentQTY * ItemPriceEUR) * LandingCostRate,
 	DepositPaymentEUR = CASE 
 						WHEN DEPOSIT_TYPE = 'No Deposit' THEN 0 
 						WHEN DEPOSIT_TYPE = 'Percentage' THEN  RepleshmentQTY * ItemPriceEUR * DEPOSIT_PERC
 						WHEN DEPOSIT_TYPE = 'Fixed amount' THEN  RepleshmentQTY * ItemPriceEUR * 0.10
 						ELSE 0 END,
-	BalancePaymentEUR = 0
+	BalancePaymentEUR = (RepleshmentQTY * ItemPriceEUR) - CASE 
+						WHEN DEPOSIT_TYPE = 'No Deposit' THEN 0 
+						WHEN DEPOSIT_TYPE = 'Percentage' THEN  RepleshmentQTY * ItemPriceEUR * DEPOSIT_PERC
+						WHEN DEPOSIT_TYPE = 'Fixed amount' THEN  RepleshmentQTY * ItemPriceEUR * 0.10
+						ELSE 0 END,
+	LandindCostsPaymentDate	= DATEADD(day,LandingCostPaymentDays,ETAWarehouse),
+	DepositDate				= NextOrderDate,
+	BalancePaymentDate		= DATEADD(day,PAYMENT_TERM,ETD)
 FROM CTE_REP_TOTAL t
-LEFT JOIN TEST.L0_MI_PURCH_FX_RATES fx
-	ON fx.CurrencyCode = price.DEPOSIT_CURRENCY
 WHERE
 		RepleshmentQTY >0
-ORDER BY OOSDATE DESC
+--ORDER BY OOSDATE DESC
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-select top 10 * from PL.PL_V_LAST_MEK 
-
-
-
-select * from L0.L0_S4HANA_2LIS_02_ITM WHERE cast(matnr as int) = '10046761' order by erdat desc
-
-
-SELECT CAST(MATNR AS INT) MATNR, ZZ_NETPR , rk = RANK() OVER(Partition by CAST(MATNR AS INT) ORDER BY SYDAT DESC)
-FROM L0.L0_S4HANA_2LIS_02_ITM itm
-WHERE
-	ROCANCEL <> 'X'
-	AND 
-	LGORT = '1000'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-select * from [PL].[PL_V_ITEM_DETAILED] where materialgroup = 'CK3' --itemno = 10035553
-
-
-
-
-
-
-
----- OOS
-
-	SELECT NUM_ITEM, MIN(D_CALENDAR_DATE) OOSDate, DATEDIFF(day, GETDATE(),MIN(D_CALENDAR_DATE))
-	FROM TEST.L1_FACT_A_STOCK_DEVELOPMENT 
-	WHERE
-		VL_FORECAST_TOTAL_STOCK = 0
-		AND 
-		NUM_ITEM like '1%'
-	GROUP BY NUM_ITEM
-	order by 2 desc
-
-	select top 10 * from PL.PL_V_LAST_MEK  
-
-	SELECT MabrandSage,itemStatus, s.*,(VL_FORECAST_TOTAL_STOCK / VL_FC_Quantity) *100
-	FROM TEST.L1_FACT_A_STOCK_DEVELOPMENT s
-	INNER JOIN Pl.PL_V_ITEM it on it.ItemNo = s.NUM_ITEM 
-	WHERE
-		VL_FORECAST_TOTAL_STOCK > 0 and VL_OPEN_QUANTITY >0 and VL_FC_Quantity >0
-		AND 
-		NUM_ITEM like '1%'
-		and D_CALENDAR_DATE = '2026-02-01'
-	order by 9 desc
+--SELECT * FROM TEST.PL_V_REPLENISHMENT_ORDERS_CALCULATED
 

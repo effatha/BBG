@@ -1,4 +1,4 @@
-/****** Object:  StoredProcedure [TEST].[WR_TX_L1_FACT_A_SALES_TRANSACTIONS_L1_FACT_A_SALES_TRANSACTION_KPI_SM]    Script Date: 10/07/2025 07:39:23 ******/
+/****** Object:  StoredProcedure [TEST].[WR_TX_L1_FACT_A_SALES_TRANSACTIONS_L1_FACT_A_SALES_TRANSACTION_KPI_SM]    Script Date: 22/08/2025 11:53:46 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -6,12 +6,16 @@ GO
 ALTER PROC [TEST].[WR_TX_L1_FACT_A_SALES_TRANSACTIONS_L1_FACT_A_SALES_TRANSACTION_KPI_SM] AS
 BEGIN
 	--DELETE FROM KPI TABLE JUST THE SAP AND SAGE TRANSACTIONS
-	TRUNCATE TABLE  [TEST].[L1_FACT_A_SALES_TRANSACTION_KPI_SM]
+	--TRUNCATE TABLE  [TEST].[L1_FACT_A_SALES_TRANSACTION_KPI_SM]
 	
 
 	DECLARE @LOAD_START_DATE AS date 
 
-	SET @LOAD_START_DATE = CAST(GETDATE () as date)
+	SET @LOAD_START_DATE = '2025-08-01'
+
+	DELETE FROM [TEST].[L1_FACT_A_SALES_TRANSACTION_KPI_SM] WHERE D_CREATED>=@LOAD_START_DATE
+
+
 
 ;WITH CTE_ENVIRO as 
     (
@@ -419,9 +423,9 @@ BEGIN
 		WHERE 
 			(item.NUM_ITEM NOT LIKE '7%' OR ID_ITEM_PARENT IS NOT NULL )
 			AND item.NUM_ITEM NOT LIKE '6%'
-			--AND fact.[DT_DWH_UPDATED]>= @LOAD_START_DATE
+			AND fact.D_CREATED>=@LOAD_START_DATE
 			AND fact.CD_TYPE IN ('ZAA','ZKE','ZAZ')
-			AND fact.D_CREATED >= '2024-06-01'
+			--AND fact.D_CREATED >= '2024-01-01'
 			and isnull (FL_INCIDENT,'N')<>'Y'
 			and dimchannel.CD_CHANNEL_GROUP_1 not in ('Intercompany', 'Mandanten')
 			and dimchannel.CD_CHANNEL_GROUP_1 is not null
@@ -430,7 +434,6 @@ BEGIN
 	CTE_SALES_L2 AS 
 	(
 		SELECT sales.*
-			,(Turnover * [PCT_PAYMENTS_ORDER])																	AS Payments
 			,(Turnover * [PCT_COMMISSIONS_MARKETPLACES])														AS CommissionsMarketplaces
 			,(Turnover - ValueAddedTax - OrderDiscounts + OrderCharges) * VL_GROSS_ORDER_VALUE_PARAM			AS GrossOrderValue
 			,(OrderQuantity * CancellRate)* VL_CANCELLED_ORDERS_QUANTITY_EST_PARAM								AS CancelledOrdersQuantityEst
@@ -521,6 +524,8 @@ BEGIN
 	CTE_SALES_L6 AS 
 	(
 		SELECT sales.*
+				,(RevenueEst * [PCT_PAYMENTS_ORDER])																	AS Payments
+
 				 ,(RevenueEst - NetProductCostEst - ((ReplacementProductCostEst_PreCal * NetProductCostEst))) * VL_PC0_PARAM				AS PC0
 				 ,(ShippingCostsInvoicedEst+ShippingCostsReturnedEst+ShippingCostsReplacedEst)										        AS FulfillmentOutboundEst
 				 ,(ReplacementProductCostEst_PreCal * NetProductCostEst)																	AS ReplacementProductCostEst

@@ -1,0 +1,17 @@
+SELECT top 100 *
+FROM L1.[L1_FACT_A_CLAIM_RATES] 
+where cd_type = 'S2'
+
+--[CD_SALES_PROCESS_ID] = '0407709277'
+
+
+and AMT_REFUNDS_EUR > 0 
+order by d_created desc
+
+SELECT * FROM 
+
+
+
+
+SELECT * FROM  [L1_FIN].[L1_FACT_A_FINANCE_TRANSACTIONS_KPI] where CD_SALES_PROCESS_ID = '0407709277'
+
