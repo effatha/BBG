@@ -1,7 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Purchasing",
+    "\\Purchasing\\NewDWH",
+    "\\Steering\\Jul25"
   ],
-  "SelectedNode": "\\C:\\Users\\h.barbosa\\source\\repos\\effatha\\BBG",
+  "SelectedNode": "\\Purchasing\\NewDWH\\WR_TX_L0_S4HANA_LIKP_LIPS_L1_FACT_A_DELIVERY_NOTES.sql",
   "PreviewInSolutionExplorer": false
 }
