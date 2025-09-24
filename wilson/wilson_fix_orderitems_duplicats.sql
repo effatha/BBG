@@ -6,7 +6,8 @@
 	having count(*) >1
 	order by 4 desc
 
-
+	SELECT * INTO [order_bck20250911] FROM [order]
+	SELECT * INTO [OrderItem_bck20250911] FROM [OrderItem]
 
   select * from [order] where OrderId = 407891490 invoicenumber = '4007035044'
 
@@ -54,6 +55,11 @@ cte_dup_data_update as
 --		ct.ArticleNumber = up.ArticleNumber
 --		AND
 --		ct.OrderPosition = up.OrderPosition
+--WHERE
+--	YEAR(oi.CreatedOn) = 2024
+--	and
+--	month(oi.CreatedOn) >= 7 
+--	and month(oi.CreatedOn) <= 12
 
 UPDATE oi
 	SET IsDeleted = 1

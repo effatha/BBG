@@ -269,9 +269,12 @@ END
 
 EXEC sp_addrolemember N'rl_ex_reader', N'sp-BBG-DWH-PPCAuto'
 
+GRANT SELECT ON PL.PL_V_STOCK TO [sp-BBG-DWH-Lobster];
+GRANT SELECT ON PL.PL_V_DETAILED_STOCK TO [sp-BBG-DWH-Lobster];
+
+
+CREATE USER [sp-BBG-DWH-Lobster] FROM EXTERNAL PROVIDER;
 GRANT SELECT ON EX.EX_V_ITEM TO sp-BBG-DWH-PPCAuto;
-
-
 
 ------------------------------------------------------
 -- BAINE USER PERMISSIONS
