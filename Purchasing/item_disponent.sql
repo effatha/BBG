@@ -1,4 +1,3 @@
-/****** Script for SelectTopNRows command from SSMS  ******/
 SELECT *
   FROM [CT dwh 03 Intelligence].[purch].[tDimPurchaser]
 

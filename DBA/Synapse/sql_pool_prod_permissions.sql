@@ -305,3 +305,23 @@ GRANT SELECT ON EX.EX_V_ITEM TO sp-BBG-DWH-PPCAuto;
 
 
 				EXEC sp_addrolemember N'db_datawriter', N'synw-sql-login-prd'
+
+------------------------------------------------------
+--  USER DWH_RainforestTracker -- Ulisses
+-------------------------------------------------------
+		CREATE USER [sp-BBG-DWH-RainforestTracker] FROM EXTERNAL PROVIDER;
+		
+		GRANT SELECT ON PL.PL_V_BL_FORECAST TO [sp-BBG-DWH-RainforestTracker]
+		GRANT SELECT ON Pl.PL_V_AMAZON_ASIN_2_ITEM_MAPPING TO [sp-BBG-DWH-RainforestTracker]
+		GRANT SELECT ON L1.[L1_DIM_A_AMAZON_ASIN_2_ITEM_MAPPING] TO [sp-BBG-DWH-RainforestTracker]
+
+		GRANT SELECT ON PL.PL_V_BL_SALES TO [sp-BBG-DWH-RainforestTracker]
+		GRANT SELECT ON [L1].[L1_FACT_F_BOTTOM_LINE_FORECAST] TO [sp-BBG-DWH-RainforestTracker]
+		
+		
+		GRANT SELECT ON [PL].[PL_V_ITEM] TO [sp-BBG-DWH-RainforestTracker]
+		GRANT SELECT ON [L1].[L1_DIM_A_ITEM] TO [sp-BBG-DWH-RainforestTracker]
+
+
+		GRANT SELECT ON [PL].[PL_V_SALES_CHANNEL] TO [sp-BBG-DWH-RainforestTracker]
+		GRANT SELECT ON [L1].[L1_DIM_A_SALES_CHANNEL] TO [sp-BBG-DWH-RainforestTracker]
