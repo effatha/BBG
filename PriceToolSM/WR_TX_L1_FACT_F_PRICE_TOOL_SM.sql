@@ -22,8 +22,9 @@ BEGIN
 	DECLARE @DateCalc as date 
 	SET @DateCalc = CAST(getdate() as date)
 
+		DECLARE @MAXLOAD_DATE as datetime2(7)
 
-	TRUNCATE TABLE [L1].[L1_FACT_F_PRICE_TOOL_SM]
+	SELECT @MAXLOAD_DATE = ISNULL(MAX([DT_DWH_CREATED]),'2025-01-01') FROM [L1].[L1_FACT_F_PRICE_TOOL_SM]
 
 ;WITH CTE_ENVIRO as 
     (
@@ -100,7 +101,7 @@ SELECT
 ,CTE_SALES_L1 AS
 	(
 		SELECT 
-			 [D_PRICE]						= @DateCalc											
+			 [D_PRICE]						= ISNULL(fact.MONTHCALCULATION,cast(fact.LOAD_TIMESTAMP as date))											
 			,[CD_ITEM]						= fact.ItemNo																				
 			,CD_FULFILLMENT					= @DEFAULT_FULLFILMENT										
 			,[T_STORAGE_LOCATION]			= @DEFAULT_STORAGE_LOCATION
@@ -111,6 +112,9 @@ SELECT
 			,[CD_COUNTRY_GROUP]				= Country						
 			,[CD_CHANNEL_GROUP_3]			= fact.ChannelGroup3
 			,VL_ITEM_QUANTITY				= 1 
+			,VL_ITEM_QUANTITY_FIRST_YEAR	= fact.QtyFirstYear
+			,VL_ITEM_QUANTITY_6M			= fact.QtyFC6Months
+			,VL_ITEM_QUANTITY_12M			= fact.QtyFC12Months
 			,AMT_PLAN_PRICE_EUR				= PlanPrice							
 			,AMT_SHIPPING_COST_EST_EUR		= ShippingCost
 			,AMT_SHIPPING_COST_SERVICES_EST_EUR		= 0 
@@ -119,26 +123,32 @@ SELECT
 			,AMT_TARGET_NET_ORDER_VALUE_EUR = PlanPrice
 			,CD_CURRENCY				  = 'EUR'								
             ,VL_REFUND_RATE 			  = CASE 
+												WHEN ISNULL(fact.RefundRate,0) > 0 THEN fact.RefundRate
 												WHEN ISNULL(family_rates.RefundRate,0) > 0 THEN family_rates.RefundRate
 												WHEN ISNULL(l3_rates.RefundRate,0) > 0 THEN l3_rates.RefundRate
 												ELSE @DEFAULT_REFUND_RATE END	
 	        ,VL_RETURN_RATE				  = CASE 
+												WHEN ISNULL(fact.[ReturnRate],0) > 0 THEN fact.[ReturnRate]
 												WHEN ISNULL(family_rates.[ReturnRate],0) > 0 THEN family_rates.[ReturnRate]
 												WHEN ISNULL(l3_rates.[ReturnRate],0) > 0 THEN l3_rates.[ReturnRate]
 												ELSE @DEFAULT_RETURN_RATE END	
         	,VL_REPLACEMENT_RATE 		  =CASE 
+												WHEN ISNULL(fact.ReplacementRate,0) > 0 THEN fact.ReplacementRate
 												WHEN ISNULL(family_rates.ReplacementRate,0) > 0 THEN family_rates.ReplacementRate
 												WHEN ISNULL(l3_rates.ReplacementRate,0) > 0 THEN l3_rates.ReplacementRate
 												ELSE @DEFAULT_REPLACEMENT_RATE END	
 			,CD_REFUND_RATE_SOURCE 		  = CASE 
+												WHEN ISNULL(fact.RefundRate,0) > 0 THEN 'Override'
 												WHEN ISNULL(family_rates.RefundRate,0) > 0 THEN 'family_rates'
 												WHEN ISNULL(l3_rates.RefundRate,0) > 0 THEN 'l3_rates'
 												ELSE 'Default' END	
             ,CD_RETURN_RATE_SOURCE 		  = CASE 
+												WHEN ISNULL(fact.[ReturnRate],0) > 0 THEN 'Override'
 												WHEN ISNULL(family_rates.[ReturnRate],0) > 0 THEN'family_rates'
 												WHEN ISNULL(l3_rates.[ReturnRate],0) > 0 THEN 'l3_rates'
 												ELSE 'Default' END	
             ,CD_REPLACEMENT_RATE_SOURCE	  = CASE 
+												WHEN ISNULL(fact.ReplacementRate,0) > 0 THEN 'Override'
 												WHEN ISNULL(family_rates.ReplacementRate,0) > 0 THEN 'family_rates'
 												WHEN ISNULL(l3_rates.ReplacementRate,0) > 0 THEN 'l3_rates'
 												ELSE 'Default' END										
@@ -153,46 +163,47 @@ SELECT
 			,AMT_PRECALC_ENVIRO_REST_UNIT_FEE_EUR = env.AMT_FEE_PER_UNIT * COALESCE(enviro_rate.VL_FX_RATE, 1) 
             ,AMT_PRECALC_REPACKAGING_EUR = repack.AMT_FEE_PER_UNIT * COALESCE(enviro_rate.VL_FX_RATE, 1) * 0.025 							
 
-			,PCT_MKT_RATE = mkt.MARKETINGRATE
+			,PCT_MKT_RATE = CASE WHEN ISNULL(fact.MarketingRate,0) = 0 THEN mkt.MARKETINGRATE ELSE fact.MarketingRate END
 			,PCT_VAT_VALUE = CASE WHEN ISNULL(vat.PCT_VALUE,0) = 0 THEN 0 ELSE vat.PCT_VALUE / 100 END
 			,VL_DEPRETIATION_RATE = ISNULL(dep.VL_RATE,0)
 			,PCT_SM_TARGET = fact.SMTARGET
+			,DT_DWH_CREATED = fact.LOAD_TIMESTAMP
 			FROM L0.L0_MI_PRICE_TOOL_SM fact
 			LEFT JOIN [L1].[L1_DIM_A_CS_COMMISSIONS_AMAZON] c_amaz
 				ON fact.L1 = c_amaz.T_PRODUCT_HIERARCHY_1
 					AND fact.L2 = c_amaz.T_PRODUCT_HIERARCHY_2
-					AND @DateCalc BETWEEN c_amaz.D_VALID_FROM AND c_amaz.D_VALID_TO
+					AND ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP) BETWEEN c_amaz.D_VALID_FROM AND c_amaz.D_VALID_TO
 					AND CASE WHEN fact.Country = 'INT' THEN 'ES' ELSE fact.Country END = c_amaz.CD_CHANNEL_COUNTRY
 			--join enviro
 			LEFT JOIN  cte_enviro_agg env
 				ON fact.L3 = env.T_PRODUCT_HIERARCHY_3
 				AND fact.Country = env.CD_COUNTRY_DELIVERY
-				AND YEAR(@DateCalc) = env.NUM_YEAR
+				AND YEAR(ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP)) = env.NUM_YEAR
 			--join enviro for repackacing
 			LEFT JOIN CTE_ENVIRO repack
 				ON fact.L3 = repack.T_PRODUCT_HIERARCHY_3
 				AND fact.Country   = repack.CD_COUNTRY_DELIVERY
-				AND YEAR(@DateCalc) = repack.NUM_YEAR
+				AND YEAR(ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP)) = repack.NUM_YEAR
 				AND repack.CD_ENVIRO_CATEGORY = 'Packaging'
 			--join fx rate for enviro
 			LEFT JOIN [L1].[L1_FACT_F_FX_RATE] enviro_rate
 				ON env.cd_currency=enviro_rate.cd_currency
-				AND Year(@DateCalc)=Year(enviro_rate.D_EFFECTIVE)
-				AND Month(@DateCalc)=Month(enviro_rate.D_EFFECTIVE)	
+				AND Year(ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP))=Year(enviro_rate.D_EFFECTIVE)
+				AND Month(ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP))=Month(enviro_rate.D_EFFECTIVE)	
 			LEFT JOIN [L0].[L0_MI_BUSINESS_PLAN_MARKETING_RATES] mkt
 				on REPLACE(mkt.[CHANNELGROUP3],' ','') = fact.ChannelGroup3
-				and YEAR(@DateCalc) = YEAR(mkt.[MONTH])
-				and MONTH(@DateCalc) = MONTH(mkt.[MONTH])
+				and YEAR(ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP)) = YEAR(mkt.[MONTH])
+				and MONTH(ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP)) = MONTH(mkt.[MONTH])
 			LEFT JOIN [L0].L0_MI_BUSINESS_PLAN_COMMISSIONS_MARKETPLACES com_mkt_bs
 				on	1=1
 				AND com_mkt_bs.[CHANNELGROUP3] = fact.ChannelGroup3
-				and YEAR(@DateCalc) = YEAR(com_mkt_bs.[MONTH])
-				and MONTH(@DateCalc) = MONTH(com_mkt_bs.[MONTH])
+				and YEAR(ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP)) = YEAR(com_mkt_bs.[MONTH])
+				and MONTH(ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP)) = MONTH(com_mkt_bs.[MONTH])
 			LEFT JOIN [L1].[L1_FACT_A_COUNTRY_VAT] vat
 				on vat.[CD_COUNTRY] = CASE WHEN fact.Country = 'INT'THEN 'SI' ELSE fact.Country END 
 				and vat.[D_VALID_TO]  = '9999-12-31'
 			LEFT JOIN [L1].[L1_DIM_A_DEPRECIATION_VALUES] dep
-				on @DateCalc between dep.D_VALID_FROM and dep.D_VALID_TO
+				on ISNULL(fact.MONTHCALCULATION,fact.LOAD_TIMESTAMP) between dep.D_VALID_FROM and dep.D_VALID_TO
 				AND dep.T_PRODUCT_HIERARCHY_2 = fact.L2
 				and dep.T_STORAGE_LOCATION = @DEFAULT_STORAGE_LOCATION
 			LEFT JOIN cte_rrr_item_L3_rates l3_rates 
@@ -203,7 +214,8 @@ SELECT
 				on REPLACE(family_rates.CD_CHANNEL_GROUP_3,' ','') = REPLACE(fact.ChannelGroup3,' ','')
 				AND family_rates.CD_COUNTRY_DELIVERY = fact.Country
 				AND family_rates.T_PRODUCT_HIERARCHY_4 = fact.L4
-
+			WHERE
+				fact.LOAD_TIMESTAMP > @MAXLOAD_DATE
 	),
 	CTE_SALES_L2 AS 
 	(
@@ -338,6 +350,19 @@ SELECT
                   , 2)
             ELSE NULL END,
 			PCT_SM_ORIGINAL = [AMT_STEERING_MARGIN_FC_EUR] / AMT_TARGET_NET_ORDER_VALUE_EUR
+			 
+			,AMT_NET_ORDER_VALUE_FIRST_YEAR_FC_EUR = AMT_NET_ORDER_VALUE_FC_EUR * VL_ITEM_QUANTITY_FIRST_YEAR
+			,AMT_NET_ORDER_VALUE_6M_FC_EUR = AMT_NET_ORDER_VALUE_FC_EUR * VL_ITEM_QUANTITY_6M
+			,AMT_NET_ORDER_VALUE_12M_FC_EUR = AMT_NET_ORDER_VALUE_FC_EUR * VL_ITEM_QUANTITY_12M
+
+			,AMT_REVENUE_FIRST_YEAR_FC_EUR = AMT_REVENUE_FC_EUR * VL_ITEM_QUANTITY_FIRST_YEAR
+			,AMT_REVENUE_6M_FC_EUR = AMT_REVENUE_FC_EUR * VL_ITEM_QUANTITY_6M
+			,AMT_REVENUE_12M_FC_EUR = AMT_REVENUE_FC_EUR * VL_ITEM_QUANTITY_12M
+
+			,AMT_STEERING_MARGIN_FIRST_YEAR_FC_EUR = AMT_STEERING_MARGIN_FC_EUR * VL_ITEM_QUANTITY_FIRST_YEAR
+			,AMT_STEERING_MARGIN_6M_FC_EUR = AMT_STEERING_MARGIN_FC_EUR * VL_ITEM_QUANTITY_6M
+			,AMT_STEERING_MARGIN_12M_FC_EUR = AMT_STEERING_MARGIN_FC_EUR * VL_ITEM_QUANTITY_12M
+
 		FROM CTE_SALES_L8 sales 
 	
 	
@@ -401,6 +426,19 @@ SELECT
 		   ,PCT_SM_TARGET
 		   ,AMT_SM_TARGET_PLAN_PRICE_EUR
 		   ,PCT_SM_ORIGINAL
+		   ,VL_ITEM_QUANTITY_FIRST_YEAR
+		   ,VL_ITEM_QUANTITY_6M
+		   ,VL_ITEM_QUANTITY_12M
+		   ,[AMT_NET_ORDER_VALUE_FIRST_YEAR_FC_EUR] 
+		   ,[AMT_NET_ORDER_VALUE_6M_FC_EUR]
+		   ,[AMT_NET_ORDER_VALUE_12M_FC_EUR] 
+		   ,[AMT_REVENUE_FIRST_YEAR_FC_EUR] 
+		   ,[AMT_REVENUE_6M_FC_EUR] 
+		   ,[AMT_REVENUE_12M_FC_EUR]
+		   ,[AMT_STEERING_MARGIN_FIRST_YEAR_FC_EUR] 
+		   ,[AMT_STEERING_MARGIN_6M_FC_EUR]
+		   ,[AMT_STEERING_MARGIN_12M_FC_EUR]
+		   ,DT_DWH_CREATED
 		   )
 	SELECT
          [D_PRICE]
@@ -461,6 +499,19 @@ SELECT
 		   ,PCT_SM_TARGET
 		   ,AMT_SM_TARGET_PLAN_PRICE_EUR
 		   ,PCT_SM_ORIGINAL
+		   ,VL_ITEM_QUANTITY_FIRST_YEAR
+		   ,VL_ITEM_QUANTITY_6M
+		   ,VL_ITEM_QUANTITY_12M
+		   ,[AMT_NET_ORDER_VALUE_FIRST_YEAR_FC_EUR] 
+		   ,[AMT_NET_ORDER_VALUE_6M_FC_EUR]
+		   ,[AMT_NET_ORDER_VALUE_12M_FC_EUR] 
+		   ,[AMT_REVENUE_FIRST_YEAR_FC_EUR] 
+		   ,[AMT_REVENUE_6M_FC_EUR] 
+		   ,[AMT_REVENUE_12M_FC_EUR]
+		   ,[AMT_STEERING_MARGIN_FIRST_YEAR_FC_EUR] 
+		   ,[AMT_STEERING_MARGIN_6M_FC_EUR]
+		   ,[AMT_STEERING_MARGIN_12M_FC_EUR]
+		   ,DT_DWH_CREATED
 	FROM CTE_SALES_L9
 
 

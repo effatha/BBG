@@ -1,5 +1,6 @@
-CREATE VIEW [PL].PL_V_PRICE_TOOL_SM
-AS (
+ALTER VIEW [PL].PL_V_PRICE_TOOL_SM
+AS
+	WITH CTE_MAIN_DATA AS (
 	SELECT
 	   PriceDate					= [D_PRICE]
 	  ,ItemNo						= [CD_ITEM]
@@ -48,12 +49,44 @@ AS (
 	,[SM %]							= PCT_SM_ORIGINAL
 	,[SMTarget %]					= PCT_SM_TARGET
 	,[ExpectedPlanPriceSMTarget]	= AMT_SM_TARGET_PLAN_PRICE_EUR
-
+	-- 											 
+	,VL_ITEM_QUANTITY_FIRST_YEAR				 AS   QtyFirstYear
+	,VL_ITEM_QUANTITY_6M						 AS	  QtyFC6Months
+	,VL_ITEM_QUANTITY_12M						 AS	  QtyFC12Months
+	,[AMT_NET_ORDER_VALUE_FIRST_YEAR_FC_EUR] 	 AS   NetOrderValueFirstYearFC
+	,[AMT_NET_ORDER_VALUE_6M_FC_EUR]			 AS	  NetOrderValue6MFC
+	,[AMT_NET_ORDER_VALUE_12M_FC_EUR] 			 AS   NetOrderValue12MFC
+	,[AMT_REVENUE_FIRST_YEAR_FC_EUR] 			 AS	  RevenueFirstYearFC
+	,[AMT_REVENUE_6M_FC_EUR] 					 AS   Revenue6MFC
+	,[AMT_REVENUE_12M_FC_EUR]					 AS   Revenue12MFC
+	,[AMT_STEERING_MARGIN_FIRST_YEAR_FC_EUR] 	 AS	  SteeringMarginFirstYearFC
+	,[AMT_STEERING_MARGIN_6M_FC_EUR]			 AS   SteeringMargin6MYearFC
+	,[AMT_STEERING_MARGIN_12M_FC_EUR]			 AS   SteeringMargin12MYearFC
+	,Rank() over(partition by [CD_ITEM],CD_CHANNEL_GROUP_3,CD_COUNTRY_GROUP order by DT_DWH_CREATED desc) AS LastVersion
 	FROM [L1].[L1_FACT_F_PRICE_TOOL_SM] kpi
+	) 
+	SELECT
+	*
+	FROM CTE_MAIN_DATA
+	WHERE 
+		LastVersion = 1
 
 
 
-);
-GO
 
 
+
+--select * from [PL].PL_V_PRICE_TOOL_SM
+
+
+--select * from  L1.[L1_FACT_F_PRICE_TOOL_SM] 
+
+
+--select * from  L0.L0_MI_PRICE_TOOL_SM order by load_timestamp 
+	SELECT  ISNULL(MAX([DT_DWH_CREATED]),'2025-01-01') FROM [L1].[L1_FACT_F_PRICE_TOOL_SM]
+
+		DECLARE @MAXLOAD_DATE as  datetime2(7)
+
+	SELECT @MAXLOAD_DATE = ISNULL(MAX([DT_DWH_CREATED]),'2025-01-01') FROM [L1].[L1_FACT_F_PRICE_TOOL_SM]
+
+	select *,@MAXLOAD_DATE from  L0.L0_MI_PRICE_TOOL_SM where load_timestamp > @MAXLOAD_DATE
