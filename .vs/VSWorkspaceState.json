@@ -1,6 +1,13 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\DBA",
+    "\\DBA\\Synapse",
+    "\\Purchasing\\OldDWH",
+    "\\Purchasing\\OldDWH\\FutureInboundIssues",
+    "\\Steering",
+    "\\Steering\\checks"
   ],
+  "SelectedNode": "\\DBA\\Synapse\\sql_pool_prod_permissions.sql",
   "PreviewInSolutionExplorer": false
 }
