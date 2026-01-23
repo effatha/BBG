@@ -2,8 +2,8 @@ DECLARE @DOCUMENTO_NO AS VARCHAR(50)
 DECLARE @ITEM AS VARCHAR(50)
 DECLARE @DOCUMENTO_LINE AS INT
 
-SET @DOCUMENTO_NO =  '4501021284'
---SET @ITEM =  '10034971'
+SET @DOCUMENTO_NO =  '4501020818'
+--SET @ITEM =  '10041353'
 
 SELECT 'L1_FACT_A_PURCHASING_TRANSACTIONS',CAST(CD_ITEM as int) ItemNO,FL_DELIVERY_COMPLETED,st.TXTMD,
 * 
@@ -56,13 +56,18 @@ WHERE 1=1
   --SELECT max(load_timestamp) FROM  TEST.L0_S4HANA_2LIS_02_SCN bf where ebeln = '4501012402' and ebelp = '00010'
 
 
-    SELECT top 10 * FROM  L0.L0_S4HANA_2LIS_02_ITM bf  order by load_timestamp desc
+    SELECT top 10 * FROM  L0.L0_S4HANA_2LIS_02_ITM bf  where ebeln = '4501021756' order by load_timestamp desc
 
     where 
     ebeln = '4501021897' 
             and ebelp = 10
-SELECT *    FROM TEST.L0_S4HANA_2LIS_02_HDR HDR where 
-    ebeln = '4501021897' 
+SELECT *    FROM L0.L0_S4HANA_2LIS_02_HDR HDR where 
+    ebeln = '4501020818' 
+
+
+    select *  
+    FROM L1.L1_FACT_A_PURCHASING_TRANSACTIONS s where CD_DOCUMENT_NO = '4501021756' and cd_document_line = '00050'
+
 
 
 
@@ -73,7 +78,7 @@ SELECT *    FROM TEST.L0_S4HANA_2LIS_02_HDR HDR where
             and ebelp = 10
 
 
- SELECT ITM.EBELP,
+ SELECT ITM.EBELP,itm.ELIKZ,
   *
     FROM L0.L0_S4HANA_2LIS_02_HDR HDR
     INNER JOIN L0.L0_S4HANA_2LIS_02_ITM ITM
@@ -91,9 +96,9 @@ SELECT *    FROM TEST.L0_S4HANA_2LIS_02_HDR HDR where
     --AND
     --    ISNULL(itm.ROCANCEL,'') <> 'R'
     AND
-        HDr.EBELN = '4501018795'
+        HDr.EBELN = '4501021756'
         AND 
-        CAST(ITM.MATNR as int) = 10046212
+        CAST(ITM.MATNR as int) = 10035735
         order by itm.ebelp
 
 
@@ -102,8 +107,8 @@ SELECT *    FROM TEST.L0_S4HANA_2LIS_02_HDR HDR where
         *
     FROM TEST.L1_FACT_A_INBOUND_DELIVERY_NOTES 
     WHERE
-    CD_PURCHASING_DOCUMENT_NO = '4501018795'
-    AND CD_ITEM = 10046212
+    CD_PURCHASING_DOCUMENT_NO = '4501021095'
+    AND CD_ITEM = 11036081
 
 
     where 1=1
@@ -204,3 +209,51 @@ sELECT * FROM L0.L0_S4HANA_0STOR_LOC_TEXT where txtmd = 'Kitting'
 
 
 SELECT * FROM [TEST].[PL_V_FUTURE_INBOUND]  where CD_DOCUMENT_NO = '4501021248'
+
+
+
+SELECT 
+		CD_DELIVERY_DOCUMENT_NO = bf.ZZ_VBELN_IM,
+		CD_DELIVERY_DOCUMENT_LINE = bf.ZZ_VBELP_IM,
+        *
+		--VL_GR_QTY = SUM(ISNULL(MENGE,0) * ISNULL(VL_MULTIPLIER,0))
+    FROM L0.L0_S4HANA_2LIS_03_BF bf
+	INNER JOIN TEST.[L0_MI_STOCK_INDICATOR] stck
+		ON stck.BWART = bf.BWART 
+			AND bf.SHKZG = stck.SHKZG
+    WHERE  1=1
+        AND ZZ_VBELN_IM in('0180797644')
+        AND ZZ_VBELP_IM in ('50','900005')
+	GROUP BY bf.ZZ_VBELN_IM, bf.ZZ_VBELP_IM
+
+
+    SELECT DISTINCT lips_kit.vlstk,
+		CD_PURCHASING_DOCUMENT_NO	= itm.EBELN,
+		CD_PURCHASING_DOCUMENT_LINE = itm.EBELP,*
+        --VL_ITEM_QTY = CASE WHEN ISNULL(lips_kit.vlstk,'') IN('C') THEN itm.MENGE ELSE 0 END
+	FROM [L0].L0_S4HANA_2LIS_02_ITM itm
+	LEFT JOIN [L0].L0_S4HANA_Z_MM_LIKP_LIPS lips
+		on itm.EBELN = lips.VGBEL
+			and CAST(itm.EBELP as int) = CAST(Lips.VGPOS as int)
+	LEFT JOIN [L0].L0_S4HANA_2LIS_04_P_MATNR po
+		on po.ZZ_CY_SEQNR = CONCAT(cast(itm.EBELN as bigint),CAST(itm.EBELP as int))
+	LEFT JOIN [L0].L0_S4HANA_Z_MM_LIKP_LIPS lips_kit
+		on lips_kit.AUFNR = po.AUFNR
+		and lips_kit.POSNR_PP = po.POSNR
+    WHERE
+         lips_kit.FOLAR = 'DIG' --- Intercompany Billing
+            
+            AND itm.EBELN = '4501021095'
+            AND itm.EBELP = '00120'
+           AND ISNULL(itm.ROCANCEL,'')<>'R'
+        and    ISNULL(lips_kit.vlstk,'') NOT IN('')
+
+
+
+
+
+        select * from [L0].L0_S4HANA_2LIS_04_P_MATNR
+
+
+
+        select * from  TEST.[L0_MI_STOCK_INDICATOR] 

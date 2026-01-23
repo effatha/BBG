@@ -1,22 +1,27 @@
-SELECT *
+SELECT count(*)
   FROM [CT dwh 03 Intelligence].[dbo].[vFutureInbound] -- 4799
   WHERE
-  Processid = '4501021607'
+  Processid = '4501018856'
 
-  10035622
+  [CT dwh 01 Stage].dbo.usp_Load_tSAPEKET
 
 ---first table to be populated
 SELECT * INTO tFactPurchasingOrdersTransactionsVerticalSAPbck20251123 FROM [CT dwh 03 Intelligence].[dbo].[tFactPurchasingOrdersTransactionsVerticalSAP] WHERE  Processid = '4501006552' and itemno = 10034106
 
 SELECT TOP 10 * from [CT dwh 03 Intelligence].dbo.vFactPurchasingOrdersTransactionsSAP 
-WHERE  Processid = '4501021607' and itemno = 10035622
+WHERE  Processid = '4501022623' and itemno = 10035321
 
 --delivery schedules for Purchase Order items
-SELECT MENGE,EINDT,* FROM [CT dwh 01 Stage].dbo.tSAP_EKET WHERE EBELN = '4501021607' and EBELP = '00170'
+SELECT MENGE,EINDT,* FROM [CT dwh 01 Stage].dbo.tSAP_EKET WHERE EBELN = '4501014582' and EBELP = '00090'
+SELECT EINDT,* FROM [CT dwh 01 Stage].dbo.vSAP_EKET WHERE EBELN  = '4501010632' and EBELP = '00140'
+
 -- delivery scheddules, confirmations
 SELECT MENGE,* FROM [CT dwh 01 Stage].dbo.tSAP_EKES WHERE EBELN = '4501004920' and EBELP = '00170'
 
-SELECT MENGE,* FROM [CT dwh 01 Stage].dbo.tSAP_EKPO WHERE EBELN = '4501021607' and EBELP = '00130'
+SELECT MENGE,* FROM [CT dwh 01 Stage].dbo.tSAP_EKPO WHERE EBELN = '4501022623' and EBELP = '00090'
+SELECT MENGE,* FROM [CT dwh 01 Stage].dbo.vSAP_EKPO WHERE EBELN = '4502000762' and cast(matnr as int) = 10032302
+
+00020	4502000762
 
 and cast(matnr as int) = '10035160'
  [dbo].[vSAP_EKBE]

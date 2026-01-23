@@ -37,6 +37,8 @@ TRUNCATE TABLE TEST.L1_FACT_A_INBOUND_DELIVERY_NOTES
 
 )
 
+select top 10* from  L0.L0_S4HANA_2LIS_03_BF  order by load_timestamp desc
+
 
 INSERT INTO TEST.L1_FACT_A_INBOUND_DELIVERY_NOTES (
 
@@ -152,3 +154,7 @@ select count(*)  FROM  [L0].[L0_S4HANA_Z_MM_LIKP_LIPS] AS A
 
 
 select * from [TEST].[PL_V_FUTURE_INBOUND] where processid = '4501021898'
+
+
+
+FROM  [L0].[L0_S4HANA_Z_MM_LIKP_LIPS] AS A 

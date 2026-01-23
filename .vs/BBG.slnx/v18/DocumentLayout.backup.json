@@ -18,6 +18,20 @@
           ]
         }
       ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "465f3577-98aa-458b-a30a-0a483b1d0346",
+        "Display": 1,
+        "X": 763,
+        "Y": 0,
+        "Width": 1162,
+        "Height": 951,
+        "WindowState": 2
+      },
+      "DocumentGroups": []
     }
   ]
 }

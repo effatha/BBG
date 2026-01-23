@@ -6,9 +6,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROCEDURE [dbo].[spFactPurchasingOrdersTransactionsVerticalSAP] AS BEGIN
+ALTER PROCEDURE [CT dwh 02 Data].[dbo].[spFactPurchasingOrdersTransactionsVerticalSAP] AS BEGIN
 SET NOCOUNT ON;
-
+--exec [dbo].[spLoadFactPurchasingOrdersTransactionsSAP]
 -- quick fix to exclude deleted Deliverynotes (DWH-1126)
 
 PRINT LTRIM(CAST(GETDATE() AS NVARCHAR(20))) + ' start!'
@@ -313,9 +313,9 @@ USING (
 		, LIS.[ZZPORT_OF_LOADING] as PortOfLoading		--changed
 		, LIS .[ZZTRANSPORT_MODE] as TransportMode		--changed
         FROM
-           ( SELECT DISTINCT * FROM [CT dwh 01 Stage].[dbo].[tSAP_EKPO]  WITH (NOLOCK) )AS EKPO 
+           [CT dwh 01 Stage].[dbo].[vSAP_EKPO] AS EKPO  WITH (NOLOCK)
             INNER JOIN
-              ( SELECT DISTINCT * FROM [CT dwh 01 Stage].[dbo].[tSAP_EKKO]  WITH (NOLOCK) )AS EKKO
+           [CT dwh 01 Stage].[dbo].[vSAP_EKKO] AS EKKO  WITH (NOLOCK)
                 ON
                     EKPO.EBELN = EKKO.EBELN
 					and EKPO.MANDT = EKKO.MANDT
@@ -443,7 +443,7 @@ USING (
                 on
                     RIGHT(EKPO.MATNR, 8) = brand.Artikelnummer
             LEFT JOIN
-                ( SELECT DISTINCT * FROM [CT dwh 01 Stage].[dbo].[tSAP_EKET]  with (nolock)) EKET
+                     [CT dwh 01 Stage].[dbo].[vSAP_EKET] AS EKET WITH (NOLOCK) 
                 on
                     EKET.MANDT     = EKPO.MANDT
                     AND EKET.EBELN = EKPO.EBELN
@@ -760,7 +760,7 @@ USING (
                 on
                     RIGHT(EKBE.MATNR, 8) = brand.Artikelnummer
             LEFT JOIN
-                ( SELECT DISTINCT * FROM [CT dwh 01 Stage].[dbo].[tSAP_EKET]  with (nolock)) EKET
+                     [CT dwh 01 Stage].[dbo].[vSAP_EKET] AS EKET WITH (NOLOCK) 
             on
                     EKET.MANDT     = EKBE.MANDT
                     AND EKET.EBELN = EKBE.EBELN
@@ -867,9 +867,9 @@ USING (
 					, EKPO.LOEKZ 
 					, EKPO.MANDT
 				from 
-                         ( SELECT DISTINCT * FROM [CT dwh 01 Stage].[dbo].[tSAP_EKPO]  WITH (NOLOCK) )AS EKPO 
+                     [CT dwh 01 Stage].[dbo].[vSAP_EKPO] AS EKPO  WITH (NOLOCK)
 				INNER JOIN 
-              ( SELECT DISTINCT * FROM [CT dwh 01 Stage].[dbo].[tSAP_EKKO]  WITH (NOLOCK) )AS EKKO
+                    [CT dwh 01 Stage].[dbo].[vSAP_EKKO] AS EKKO  WITH (NOLOCK)
 					ON EKPO.EBELN = EKKO.EBELN
 						AND EKPO.MANDT = EKKO.MANDT
 				INNER JOIN
@@ -995,9 +995,9 @@ USING (
 					, EKPO.LOEKZ 
 					, EKPO.MANDT
 				from 
-                    ( SELECT DISTINCT * FROM [CT dwh 01 Stage].[dbo].[tSAP_EKPO]  WITH (NOLOCK) )AS EKPO 
+                     [CT dwh 01 Stage].[dbo].[vSAP_EKPO] AS EKPO  WITH (NOLOCK)
 				INNER JOIN 
-              ( SELECT DISTINCT * FROM [CT dwh 01 Stage].[dbo].[tSAP_EKKO]  WITH (NOLOCK) )AS EKKO
+           [CT dwh 01 Stage].[dbo].[vSAP_EKKO] AS EKKO  WITH (NOLOCK)
 					ON EKPO.EBELN = EKKO.EBELN
 						AND EKPO.MANDT = EKKO.MANDT
 				INNER JOIN
